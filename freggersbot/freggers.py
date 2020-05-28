@@ -27,7 +27,7 @@ from .iso import Status
 from .iso.player import Player
 from .iso.item import IsoItem
 from .iso.wob_registry import WOBRegistry
-from .media.resource_manager import ResourceManager
+from .media.resource_manager import RESOURCE_MANAGER
 from .media.level import Level
 
 BrowserInfo = {
@@ -294,7 +294,6 @@ class Freggers:
 			Event.UPDATE_ROOMITEM_MENU: threading.Event()
 		}
 		self.wob_registry = WOBRegistry()
-		self.resource_manager = ResourceManager(self._session)
 		self.animation_manager = AnimationManager()
 		self.exits = []
 		self.room = None
@@ -597,7 +596,7 @@ class Freggers:
 		threading.Thread(target = self.__handle_data).start()
 		threading.Thread(target = self.__main_loop).start()
 		
-		self.resource_manager.configure(self.params)
+		RESOURCE_MANAGER.configure(self.params)
 		
 		if self.params["hasofferitems"] != None:
 			self.log('Requesting daily offer item...')
@@ -1133,7 +1132,7 @@ class Freggers:
 					
 					
 					self.level = Level(self.area_name, ctxt_room.gui())
-					self.resource_manager.request_level(self.level, None, False, True)
+					RESOURCE_MANAGER.request_level(self._session, self.level, None, False, True)
 					
 					self.send_room_loaded(ctxt_room.gui(), ctxt_room.wob_id)
 					

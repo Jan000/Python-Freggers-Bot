@@ -21,7 +21,7 @@ class ResourceManager:
 	
 	verbose_mode = False
 	
-	def __init__(self, session):
+	def __init__(self):
 		self.__inited = False
 		self.__cache_buster = ''
 		self.__image_buster = ''
@@ -31,7 +31,6 @@ class ResourceManager:
 		self.__total_decoded = 0
 		self.__failed_decoding = 0
 		self.__failed_loading = 0
-		self._session = session
 		
 		self.__level_cache = LRUCache(10)
 		self.__background_cache = LRUCache(10)
@@ -49,7 +48,7 @@ class ResourceManager:
 		self.__config = cfg
 		self.__inited = True
 	
-	def request_level(self, level, err_callback = None, keep_cache = False, use_cache = False):
+	def request_level(self, session, level, err_callback = None, keep_cache = False, use_cache = False):
 		if not self.__inited or ResourceManager.PARAM_ROOM_BASE_URL not in self.__config:
 			print('Resource manager was not initialized or invalid config')
 			return False
@@ -64,7 +63,7 @@ class ResourceManager:
 				resource = self.__resource_data[x]
 				if resource.cache_mode == ResourceManager.RELEASE_ON_LEVEL_LOAD:
 					self.__remove_resource(x)
-		resp = self._session.get('http://www.freggers.de' + self.__config[ResourceManager.PARAM_ROOM_BASE_URL] + '/' + level.area_name + '/' + level.room_name + '/' + level.room_name + '.bin' + self.__image_buster)
+		resp = session.get('http://www.freggers.de' + self.__config[ResourceManager.PARAM_ROOM_BASE_URL] + '/' + level.area_name + '/' + level.room_name + '/' + level.room_name + '.bin' + self.__image_buster)
 		if resp.status_code == 200:
 			media_container_dec = MediaContainerDecoder()
 			media_container = media_container_dec.decode_data_bytes(resp.content)
@@ -114,7 +113,7 @@ class LRUCache:
 		return None
 	
 	def remove(self, k):
-		e = self.__cache.pop(k)
+		e = self.__cache.pop(k, None)
 		if e != None:
 			if e == self.__head:
 				self.__head = e.next
@@ -153,3 +152,5 @@ class LRUCache:
 			self.v = v
 			self.prev = None
 			self.next = None
+
+RESOURCE_MANAGER = ResourceManager()
