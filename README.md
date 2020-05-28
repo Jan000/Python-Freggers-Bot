@@ -1,3 +1,5 @@
 # Python Freggers Bot
-## Installation:
+
+## Installation
+
 >`pip3 install freggersbot`
