@@ -4,6 +4,6 @@
 
 >`pip3 install freggersbot`
 
-## TODOs
+## TODO
 
 - Auto reconnect on I/O errors
