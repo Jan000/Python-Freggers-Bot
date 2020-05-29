@@ -11,7 +11,7 @@ from ..data.vector import Vector3D
 
 class Movement:
 	
-	def __init__(self, target, duration, ref, on_complete = None):
+	def __init__(self, target, duration, ref, on_complete = lambda animation: None):
 		self.segment_playtime = 0
 		self.segment_index = -1
 		self.total_playtime = 0
