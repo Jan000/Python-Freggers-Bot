@@ -1,7 +1,12 @@
 # Python Freggers Bot
 
+## Requirements
+
+- Python 3.7 or higher. Get it here: <https://www.python.org/downloads/>
+
 ## Installation
 
+Open the command prompt (press WIN + R on Windows, type CMD and press ENTER) and type in:
 >`pip3 install freggersbot`
 
 ## TODO
