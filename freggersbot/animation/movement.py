@@ -11,14 +11,14 @@ from ..data.vector import Vector3D
 
 class Movement:
 	
-	def __init__(self, target, duration, ref, on_complete = lambda animation: None):
+	def __init__(self, target, duration, ref, on_complete = None):
 		self.segment_playtime = 0
 		self.segment_index = -1
 		self.total_playtime = 0
 		self.target = target
 		self.duration = duration
 		self.ref = ref
-		self.on_complete = on_complete
+		self.on_complete = on_complete if on_complete != None else lambda animation: None
 	
 	def set_segments(self, segments):
 		if segments == None or len(segments) < 1:

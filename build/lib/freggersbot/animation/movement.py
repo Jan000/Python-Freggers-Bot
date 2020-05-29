@@ -18,7 +18,7 @@ class Movement:
 		self.target = target
 		self.duration = duration
 		self.ref = ref
-		self.on_complete = on_complete
+		self.on_complete = on_complete if on_complete != None else lambda animation: None
 	
 	def set_segments(self, segments):
 		if segments == None or len(segments) < 1:

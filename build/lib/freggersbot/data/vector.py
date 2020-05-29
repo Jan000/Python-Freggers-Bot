@@ -41,6 +41,9 @@ class Vector3D:
 	def distance(self, vector):
 		return self.distance_to(vector.x, vector.y, vector.z)
 	
+	def rounded(self):
+		return Vector3D(round(self.x), round(self.y), round(self.z))
+
 	def as_array(self):
 		return [self.x, self.y, self.z]
 	
