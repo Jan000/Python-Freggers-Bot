@@ -41,8 +41,8 @@ class ResourceManager:
 		self.__failed_decoding = 0
 		self.__failed_loading = 0
 		
-		self.__level_cache = LRUCache(10)
-		self.__background_cache = LRUCache(10)
+		self.__level_cache = LRUCache(32)
+		self.__background_cache = LRUCache(32)
 		self.__resource_data = []
 		self.__resource_ids = []
 		self.__resource_names = []

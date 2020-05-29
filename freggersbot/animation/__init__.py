@@ -15,8 +15,9 @@ class AnimationManager:
 		self.running = False
 		self.animations = {}
 		self.last_update = 0
+		self.ignore_animations = False
 		self.on_complete = lambda animation: None
-	
+
 	def start(self, time):
 		self.last_update = time
 		self.running = True
@@ -25,9 +26,12 @@ class AnimationManager:
 		self.running = False
 		self.last_update = 0
 		self.animations.clear()
-	
+
 	def moveground(self, target, points, duration, age, level, ref):
 		if not self.running:
+			return
+		if self.ignore_animations:
+			self.animations.clear()
 			return
 		animation = Point2PointMovement(target, points, duration, level, ref)
 		animation.update(age)
@@ -35,6 +39,9 @@ class AnimationManager:
 	
 	def update(self, time):
 		if not self.running:
+			return
+		if self.ignore_animations:
+			self.animations.clear()
 			return
 		elapsed = time - self.last_update
 		for target in reversed(list(self.animations.keys())):

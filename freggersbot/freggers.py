@@ -311,11 +311,11 @@ class Freggers:
 		self.log('Freggers Client initialized.')
 	
 	def log(self, *args):
-		print(self.log_prefix, '[i]', *args)
+		print('[i]', self.log_prefix, *args)
 	
 	def debug(self, *args):
 		if self.is_debug:
-			print(self.log_prefix, '[d]', *args)
+			print('[d]', self.log_prefix, *args)
 	
 	def register_callback(self, event, callback):
 		callbacks = self.__client_event_callbacks.get(event)

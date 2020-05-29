@@ -21,13 +21,15 @@ from .utils.item_pickup import ItemPickup
 from .utils import format_time
 from .iso import Status
 
-error_log = open('error.log', 'w')
+error_log = open('error.log', 'a')
 
 def log_error(error):
-	frames = getouterframes(currentframe())
-	for frame in frames:
-		print(frame[0].lineno)
-	error_log.write(str(error))
+	lines = [str(error)]
+	for frameinfo in getouterframes(currentframe()):
+		lines.append('\t{}:{} - {} / {}'.format(frameinfo[1], frameinfo[2], frameinfo[3], frameinfo[4][frameinfo[5]]))
+	print('\n'.join(lines))
+	error_log.writelines(lines)
+	error_log.flush()
 
 class FreggersBot(Freggers):
 	
@@ -2183,42 +2185,3 @@ class FreggersBot(Freggers):
 	
 	def wait_room_loaded(self):
 		self.__e_room_loaded.wait()
-		
-class BasicFreggersBot(FreggersBot):
-	
-	def __init__(self, username, password):
-		super(BasicFreggersBot, self).__init__(username, password)
-		self.register_callback(Event.CHAT_USR, self.__handle_show_chat_usr)
-		self.register_callback(Event.CHAT_SRV, self.__handle_show_chat_svr)
-		self.chat_show_blocked = True
-		
-		self.start = self.run
-		
-	
-	def __handle_show_chat_usr(self, data):
-		if data.type == 0 and (not data.overheard or self.chat_show_blocked):
-			sender = self.wob_registry.get_object_by_wobid(data.wob_id)
-			if sender == None:
-				return
-			self.log('[CHAT] {}{}{}: {}'.format(sender.name, ' [denkt]' if data.mode == 2 else (' [schreit]' if data.mode == 3 else (' [flüstert]' if data.mode == 4 else '')), ' [blocked]' if data.overheard else '', data.message))
-
-	def __handle_show_chat_svr(self, data):
-		self.log('[CHAT] [SERVER]: {}'.format(data.message))
-	
-	def run(self):
-		self.daily_routine(skip_first_cycle = False, #Am ersten Tag den Planwagen/Baustelle überspringen
-						  idle_room = 'plattenbau%2.eigenheim',
-						  idle_room_alt = 'plattenbau.plattenbau', #'beach.beach2'
-						  care_pets = True, #True/False | Kümmert sich nach dem Sammeln und Abgeben um die Haustiere im Plattenbau
-						  care_pompom = True, #True/False | Kümmert sich um das Pompom im Plattenbau
-						  maintain_amount = 200, #Anzahl an Ameisen, die im Inventar/Warteschlange gehalten werden soll
-						  overload_amount = 75,
-						  min_deliver_amount = 3, #Ab welcher Anzahl (XP / AmeisenXP) an Ameisen der Bot abgeben soll
-						  loop_min_idle_sec = 2.5 * 60 * 60, #Minimale Wartezeit in Sekunden, die der Bot in der Wohnung wartet
-						  loop_max_idle_sec = 4 * 60 * 60) #Maximale Wartezeit in Sekunden, die der Bot in der Wohnung wartet
-	
-	def vote_room(self, room):
-		self.go_to_room(room, False)
-		self.wait_room_loaded()
-		self.wait_random_delay(1, 4)
-		self.send_vote()

@@ -248,7 +248,7 @@ class Decoder:
 					return False
 				sound_label = sound_label[1]
 				index += 1
-				if sounds[sound_label] != None:
+				if sound_label in sounds:
 					print('Duplicate sound label at index', index)
 					return False
 				
@@ -280,7 +280,7 @@ class Decoder:
 				swf_label = swf_label[1]
 				index += 1
 				
-				if swf_objects[swf_label] != None:
+				if swf_label in swf_objects:
 					print('Duplicate swf object at index', index)
 					return False
 				
@@ -317,14 +317,13 @@ class Decoder:
 					print('Invalid swf bounds type at index', index)
 					return False
 				swf_bounds = swf_bounds[1]
-				if len(swf_bounds) != 16:
-					print('Invalid swf bounds size: {} Expected: 16'.format(len(swf_bounds)))
+				if swf_bounds.size() != 16:
+					print('Invalid swf bounds size: {} Expected: 16'.format(swf_bounds.size()))
 					return False
-				swf_bounds_rect = {'x': int.from_bytes(swf_bounds[0:4], byteorder = 'big'),
-								   'y': int.from_bytes(swf_bounds[4:8], byteorder = 'big'),
-								   'width': int.from_bytes(swf_bounds[8:12], byteorder = 'big'),
-								   'height': int.from_bytes(swf_bounds[12:16], byteorder = 'big')}
-				swf_obj[Decoder.SWF_BOUNDS] = swf_bounds_rect
+				swf_obj[Decoder.SWF_BOUNDS] = {'x': swf_bounds.read_int(),
+											   'y': swf_bounds.read_int(),
+											   'width': swf_bounds.read_int(),
+											   'height': swf_bounds.read_int()}
 				index += 1
 				
 				swf_data = content[index]
