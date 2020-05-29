@@ -1,3 +1,12 @@
+#Copyright (c) 2020 Jan Kiefer
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#SOFTWARE.
+
 from .point2point_movement import Point2PointMovement
 
 class AnimationManager:
@@ -18,7 +27,6 @@ class AnimationManager:
 		self.animations.clear()
 	
 	def moveground(self, target, points, duration, age, level, ref):
-		#this.animationmanager.moveground(wob.isoobj,Utils.getMovementWayPoints(path),path.duration,path.age,this.room.data,wob);
 		if not self.running:
 			return
 		animation = Point2PointMovement(target, points, duration, level, ref)

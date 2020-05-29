@@ -1,13 +1,23 @@
+#Copyright (c) 2020 Jan Kiefer
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#SOFTWARE.
+
 from ..iso import Status
 from ..net.utf_message import UtfMessage
 from .path import Path
 from .position import Position
+from .animation import AnimationData
 from .effect import EffectData
 from .item_properties import ItemProperties
 from .interaction import InteractionData
-from .animation import AnimationData
 
 class ItemData:
+	
 	def __init__(self, utfmsg):
 		self.name = utfmsg.get_string_arg(0)
 		self.wob_id = utfmsg.get_int_arg(1)

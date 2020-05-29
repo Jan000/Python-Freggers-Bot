@@ -1,14 +1,17 @@
 Metadata-Version: 2.1
 Name: freggersbot
-Version: 1.0.15
+Version: 1.0.16
 Summary: A bot for freggers.de
 Home-page: https://github.com/Jan000/Python-Freggers-Bot
 Author: Jan K
 Author-email: contact@jandev.net
 License: MIT
 Description: # Python Freggers Bot
-        ## Installation:
+        
+        ## Installation
+        
         >`pip3 install freggersbot`
+        
 Keywords: freggers bot
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3

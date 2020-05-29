@@ -43,9 +43,9 @@ class Movement:
 					segment = self.segments[-1]
 					self.segment_playtime = segment.duration
 		segment.compute(self.segment_playtime)
-		dir = segment.direction
-		if dir > -1 and self.target.direction != dir:
-			self.target.direction = dir
+		direction = segment.direction
+		if direction > -1 and self.target.get_direction() != direction:
+			self.target.set_direction(direction)
 		if self.target.get_uvz() != segment.position:
 			self.target.set_positionv(segment.position)
 	

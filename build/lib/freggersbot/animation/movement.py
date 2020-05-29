@@ -1,3 +1,12 @@
+#Copyright (c) 2020 Jan Kiefer
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#SOFTWARE.
+
 from ..data.vector import Vector3D
 
 class Movement:
@@ -34,9 +43,9 @@ class Movement:
 					segment = self.segments[-1]
 					self.segment_playtime = segment.duration
 		segment.compute(self.segment_playtime)
-		dir = segment.direction
-		if dir > -1 and self.target.direction != dir:
-			self.target.direction = dir
+		direction = segment.direction
+		if direction > -1 and self.target.get_direction() != direction:
+			self.target.set_direction(direction)
 		if self.target.get_uvz() != segment.position:
 			self.target.set_positionv(segment.position)
 	

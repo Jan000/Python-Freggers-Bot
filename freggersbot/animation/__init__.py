@@ -27,7 +27,6 @@ class AnimationManager:
 		self.animations.clear()
 	
 	def moveground(self, target, points, duration, age, level, ref):
-		#this.animationmanager.moveground(wob.isoobj,Utils.getMovementWayPoints(path),path.duration,path.age,this.room.data,wob);
 		if not self.running:
 			return
 		animation = Point2PointMovement(target, points, duration, level, ref)
