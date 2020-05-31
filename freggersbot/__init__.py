@@ -1384,10 +1384,11 @@ class FreggersBot(Freggers):
 		if badge_page == None:
 			badge_page = self.get_badge_page()
 		if badge_page != None:
-			badge_start = badge_page.find('badge_id_' + str(badge_id))
+			badge_start = badge_page.find('badge_id_' + str(badge_id) + '"')
 			if badge_start != -1:
+				i = badge_page.find('ba-requirement', badge_start)
 				return (badge_page.find('ba-progress-container', badge_start, badge_page.find('ba-badge-desc', badge_start)) == -1 and 
-					badge_page.find('ba-requirement-achieved', badge_page.find('"', badge_page.find('ba-requirement', badge_start))) != -1)
+					badge_page.find('ba-requirement-achieved', i, badge_page.find('"', i)) != -1)
 		return None
 	
 	def get_badge_page(self, user_id = None):
@@ -2153,13 +2154,73 @@ class FreggersBot(Freggers):
 		return False
 	
 	def complete_badges(self):
+		search = ItemSearch(self, 0)
+		def search_badge_item(wob_id):
+			search.wob_id = wob_id
+			search.search()
+			self.wait_random_delay(0.5, 3.5)
 		badge_page = self.get_badge_page()
 		if not self.get_is_badge_completed(8, badge_page = badge_page):
-			self.log('[Badge] Completing badge 8 ...')
+			self.log('[Badge] Completing explorer badge - Wutzlhofen...')
 			tasks = self.get_badge_tasks(8)
-			print('badge 8:')
-			for x, done in enumerate(tasks):
-				print(x, done)
+			if not tasks[0]:
+				self.go_to_room('wutzlhofen.flussdampfer', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('wutzlhofen.flussdampfer_kabeltrommel').wob_id)
+			if not tasks[1]:
+				self.go_to_room('wutzlhofen.biergarten', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('wutzlhofen.biergarten_biergartenschirmstaender').wob_id)
+			if not tasks[2]:
+				self.go_to_room('wutzlhofen.bistro', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('wutzlhofen.bistro_sofadreisitzer'))).wob_id)
+		if not self.get_is_badge_completed(9):
+			self.log('[Badge] Completing explorer badge - Hood...')
+			tasks = self.get_badge_tasks(9)
+			if not tasks[0]:
+				self.go_to_room('hood.outskirts', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('hood.outskirts_muellhaufen').wob_id)
+			if not tasks[1]:
+				self.go_to_room('hood.strasse', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('hood.strasse_muelltonneliegend').wob_id)
+			if not tasks[2]:
+				self.go_to_room('hood.waschsalon', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('hood.waschsalon_waschmaschine'))).wob_id)
+		if not self.get_is_badge_completed(10):
+			self.log('[Badge] Completing explorer badge - Tumbleweed Valley')
+			tasks = self.get_badge_tasks(10)
+			if not tasks[0]:
+				self.go_to_room('western.fort', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.iso_obj.get_uvz().x == 239, self.find_items_by_gui('western.kanonenkugeln'))).wob_id)
+			if not tasks[1]:
+				self.go_to_room('western.saloonzimmer1', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('western.badezuber').wob_id)
+			if not tasks[2]:
+				self.go_to_room('western.backlands', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('western.backlands_sitzstein1').wob_id)
+		if not self.get_is_badge_completed(20):
+			self.log('[Badge] Completing explorer badge - Schattenland')
+			tasks = self.get_badge_tasks(20)
+			if not tasks[0]:
+				self.go_to_room('gothics.friedhof', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('gothics.friedhof_uferbank'))).wob_id)
+			if not tasks[1]:
+				self.go_to_room('gothics.gruft', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('hood.getraenkedoserot'))).wob_id)
+			if not tasks[2]:
+				self.go_to_room('gothics.kirche', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('gothics.kirche_reliquienschrein').wob_id)
+		search.cleanup()
 
 	def daily_routine(self, skip_first_cycle = False, idle_room = 'plattenbau%2.eigenheim', idle_room_alt = 'plattenbau.plattenbau', 
 		care_pets = False, care_pompom = False, maintain_amount = 25, overload_amount = 100, min_deliver_amount = 3, 
@@ -2293,7 +2354,7 @@ class FreggersBot(Freggers):
 
 	def print_items(self):
 		for wob in self.wob_registry.iso_items:
-			print(wob.wob_id, wob.gui, wob.name, wob.get_primary_interaction(), wob.get_properties())
+			print(wob.wob_id, wob.gui, wob.name, wob.interactions, wob.get_properties())
 	
 	def wait_room_loaded(self):
 		self.__e_room_loaded.wait()
