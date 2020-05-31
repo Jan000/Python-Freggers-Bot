@@ -11,8 +11,8 @@ import random
 import threading
 import time
 import math
+import traceback
 from datetime import datetime, date
-from inspect import currentframe, getframeinfo, getouterframes
 
 from .freggers import Freggers, Event
 from .locale.de import LocaleDE
@@ -24,11 +24,8 @@ from .iso import Status
 error_log = open('error.log', 'a')
 
 def log_error(error):
-	lines = [str(error)]
-	for frameinfo in getouterframes(currentframe()):
-		lines.append('\t{}:{} - {} / {}'.format(frameinfo[1], frameinfo[2], frameinfo[3], frameinfo[4][frameinfo[5]]))
-	print('\n'.join(lines))
-	error_log.writelines(lines)
+	traceback.print_exc()
+	traceback.print_exc(file = error_log)
 	error_log.flush()
 
 class FreggersBot(Freggers):
@@ -2193,7 +2190,7 @@ class FreggersBot(Freggers):
 			if not tasks[0]:
 				self.go_to_room('hood.outskirts', False)
 				self.wait_room_loaded()
-				search_badge_item(self.find_item_by_gui('hood.outskirts_muellhaufen').wob_id)
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('hood.outskirts_muellhaufen'))).wob_id)
 			if not tasks[1]:
 				self.go_to_room('hood.strasse', False)
 				self.wait_room_loaded()
@@ -2223,6 +2220,7 @@ class FreggersBot(Freggers):
 			if not tasks[0]:
 				self.go_to_room('gothics.friedhof', False)
 				self.wait_room_loaded()
+				time.sleep(1.5)
 				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('gothics.friedhof_uferbank'))).wob_id)
 			if not tasks[1]:
 				self.go_to_room('gothics.gruft', False)

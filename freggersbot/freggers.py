@@ -621,7 +621,7 @@ class Freggers:
 	def connect(self):
 		if not self.__connected:
 			self.__sock = socket.socket(family = socket.AF_INET, type = socket.SOCK_STREAM)
-			self.__sock.settimeout(10)
+			self.__sock.settimeout(310)
 			self.__sock.connect((self.__host, self.__port))
 			self.__connected = True
 			self.__last_client_send = time.time()
