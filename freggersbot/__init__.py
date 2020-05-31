@@ -12,7 +12,7 @@ import threading
 import time
 import math
 import traceback
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 
 from .freggers import Freggers, Event
 from .locale.de import LocaleDE
@@ -20,6 +20,11 @@ from .utils.item_search import ItemSearch
 from .utils.item_pickup import ItemPickup
 from .utils import format_time
 from .iso import Status
+
+TIMEZONE = timezone(timedelta(hours = 2))
+
+def get_local_datetime():
+	return datetime.now(tz = TIMEZONE)
 
 error_log = open('error.log', 'a')
 
@@ -301,7 +306,7 @@ class FreggersBot(Freggers):
 			self.log('Arrived in room {} success={}'.format(room_gui, wait['success']))
 			return wait['success']
 		return True
-	
+
 	def throw_away_effects(self, inv = None):
 		self.log('Throwing away effects...')
 		if inv == None:
@@ -2275,7 +2280,7 @@ class FreggersBot(Freggers):
 				self.wait_room_loaded()
 				self.send_user_command('furz')
 
-		if not self.__church_visited_today and not self.get_is_badge_completed(41) and datetime.today().weekday() == 6:
+		if not self.__church_visited_today and not self.get_is_badge_completed(41) and get_local_datetime().weekday() == 6:
 			self.log('[Badge] Completing church visitor badge')
 			self.go_to_room('gothics.kirche', False)
 			self.__church_visited_today = True
@@ -2327,7 +2332,7 @@ class FreggersBot(Freggers):
 			if complete_quests:
 				self.complete_quest()
 			
-			now_day = date.today().day
+			now_day = get_local_datetime().day
 			day_change = now_day != last_day and (last_day != -1 or not skip_first_cycle) 
 			
 			empty_slots = FreggersBot.count_empty_slots(self.ajax_request_inventory())
@@ -2406,10 +2411,8 @@ class FreggersBot(Freggers):
 				if care_pompom:
 					self.care_pompom(idle_room, True)
 				
-				seats = list(filter(lambda item: item.get_primary_interaction() != None and item.get_primary_interaction().label == 'SIT_DOWN', self.wob_registry.iso_items))
-				if len(seats) > 0:
-					self.send_item_interaction(random.choice(seats).wob_id, 'SIT_DOWN')
-				
+				self.daily_routine_on_idle()
+
 				idle_time = random.randint(loop_min_idle_sec, loop_max_idle_sec) / 1000
 				self.log('Idling for {}...'.format(format_time(idle_time)))
 				time.sleep(idle_time)
@@ -2418,6 +2421,11 @@ class FreggersBot(Freggers):
 				self.go_to_room(idle_room_alt, False)
 			
 			last_day = now_day
+
+	def daily_routine_on_idle(self):
+		seats = list(filter(lambda item: item.get_primary_interaction() != None and item.get_primary_interaction().label == 'SIT_DOWN', self.wob_registry.iso_items))
+		if len(seats) > 0:
+			self.send_item_interaction(random.choice(seats).wob_id, 'SIT_DOWN')
 
 	def print_items(self):
 		for wob in self.wob_registry.iso_items:

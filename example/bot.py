@@ -3,7 +3,7 @@ import time
 import random
 import sys
 
-from freggersbot import FreggersBot, Event, log_error
+from freggersbot import FreggersBot, Event, log_error, get_local_datetime
 from freggersbot.utils import format_time
 
 START_DELAY = (4, 25)
