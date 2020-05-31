@@ -113,3 +113,16 @@ class LocaleDE:
 	ENOUGH_WATER = 'Noch mehr Wasser und du bekommst nasse Füße.'
 	
 	MUSHROOM_ALREADY_IN_INV = 'Du hast schon einen Pilz von dieser Sorte dabei.'
+
+	EXPLORER_BADGE_ITEMS_0 = ['Leicht feuchter Zettel',
+							  'Verrosteter Schlüssel',
+							  'Nicht zu öffnende Käse-Schatulle']
+	EXPLORER_BADGE_ITEMS_1 = ['Kröte',
+			  				  'Ring mit Brilli',
+			  				  'Goldene Rodex']
+	EXPLORER_BADGE_ITEMS_2 = ['Stinkende Bohnen',
+							  'Aloe Vera Cowboy Seife',
+							  'Blaue Bohnen']
+	EXPLORER_BADGE_ITEMS_3 = ['Fellfussel von Gieselbrand dem Werwolf',
+							  'Ausgeschlagener Vampirzahn Eldricks des Grausamen',
+							  'Auge von Emilio dem Zombie']

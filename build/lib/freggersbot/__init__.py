@@ -78,6 +78,7 @@ class FreggersBot(Freggers):
 		self.room_waits = {}
 		self.speed_factor = 0.3 + random.random()
 		self.__ants_times = {}
+		self.__church_visited_today = False
 		self.__e_room_ready = threading.Event()
 		self.__e_room_loaded = threading.Event()
 		self.__e_show_metromap = threading.Event()
@@ -96,6 +97,10 @@ class FreggersBot(Freggers):
 			localeItems.DUNG_BEATLE,
 			localeItems.ACORN
 		}
+		self.trash_items.update(localeItems.EXPLORER_BADGE_ITEMS_0)
+		self.trash_items.update(localeItems.EXPLORER_BADGE_ITEMS_1)
+		self.trash_items.update(localeItems.EXPLORER_BADGE_ITEMS_2)
+		self.trash_items.update(localeItems.EXPLORER_BADGE_ITEMS_3)
 		self.prefered_store_items = {
 			localeItems.GNOME
 		}
@@ -172,7 +177,8 @@ class FreggersBot(Freggers):
 		self.__e_timer_bar.set()
 	
 	def __handle_room_ctxt(self, room):
-		self.debug('Handle CTXT_ROOM:',room.room_context_label,room.gui(),room.room_gui,self.area_name,room.wob_id,room.desc,room.topic,room.user_owns_room,room.owner_user_id,room.owner_user_name)
+		self.debug('Handle CTXT_ROOM:',room.room_context_label,room.gui(),room.room_gui,self.area_name,room.wob_id,
+			room.desc,room.topic,room.user_owns_room,room.owner_user_id,room.owner_user_name)
 		self.__e_room_loaded.clear()
 		self.__e_level_data.clear()
 		self.__e_room_ready.set()
@@ -278,7 +284,8 @@ class FreggersBot(Freggers):
 			self.__e_show_metromap.clear()
 			self.send_show_metroplan()
 			self.__e_show_metromap.wait()
-		if self.room.room_context_label != plain_room_gui or (owner_id != None and self.room.owner_user_id != owner_id) or (exact and area_index != self.area_index and owner_id == None):
+		if (self.room.room_context_label != plain_room_gui or (owner_id != None and self.room.owner_user_id != owner_id) or 
+		   (exact and area_index != self.area_index and owner_id == None)):
 			self.log('Going to room {} exact={} ...'.format(room_gui, exact))
 			wait = {
 				'e': threading.Event(),
@@ -321,17 +328,24 @@ class FreggersBot(Freggers):
 		self.log('Deleting item \'{}\' count={} id={} ...'.format(item['description'], item['count'], item['id']))
 		return self.ajax_delete_item(item['id'])
 	
-	def delete_trash_items(self, inv = None):
+	def delete_trash_items(self, inv = None, queue = None):
 		if inv == None:
 			inv = self.ajax_request_inventory()
-		count = 0
+		if queue == None:
+			queue = self.ajax_request_item_queue()
+		count_inv = 0
 		for item in list(inv):
 			if item != None and item['description'] in self.trash_items:
 				self.delete_item(item)
 				inv.remove(item)
-				count += 1
-				
-		return count
+				count_inv += 1
+		count_queue = 0
+		for item in list(queue):
+			if item['description'] in self.trash_items:
+				self.ajax_inbox_action(item['id'], Freggers.INBOX_ACTION_DECLINE)
+				queue.remove(item)
+				count_queue += 1
+		return (count_inv, count_queue)
 	
 	@staticmethod
 	def count_empty_slots(container):
@@ -815,7 +829,7 @@ class FreggersBot(Freggers):
 		remaining_slots = count - FreggersBot.count_empty_slots(inv)
 		if remaining_slots > 0:
 			self.log('Ensuring {}/{} empty slot(s) in inventory...'.format(remaining_slots, count))
-			deleted_slot_count = self.delete_trash_items(inv = inv)
+			deleted_slot_count = self.delete_trash_items(inv = inv)[0]
 			remaining_slots -= deleted_slot_count
 			self.log('Deleted {} trash items.'.format(deleted_slot_count))
 			if remaining_slots > 0:
@@ -1378,15 +1392,47 @@ class FreggersBot(Freggers):
 				return loc
 		return None
 		
-	def get_is_badge_completed(self, badge_id):
-		req_profile = self._session.get('http://www.freggers.de/sidebar/badge/user_badges?user_id=' + self.user_id)
-		if req_profile.status_code == 200:
-			text_profile = req_profile.text
-			badge_start = text_profile.find('badge_id_' + str(badge_id))
-			badge_end = text_profile.find('ba-badge-desc', badge_start)
-			return text_profile[badge_start:badge_end].find('ba-progress-container') == -1
+	def get_is_badge_completed(self, badge_id, badge_page = None):
+		if badge_page == None:
+			badge_page = self.get_badge_page()
+		if badge_page != None:
+			badge_start = badge_page.find('badge_id_' + str(badge_id) + '"')
+			if badge_start != -1:
+				i = badge_page.find('ba-requirement', badge_start)
+				return (badge_page.find('ba-progress-container', badge_start, badge_page.find('ba-badge-desc', badge_start)) == -1 and 
+					badge_page.find('ba-requirement-achieved', i, badge_page.find('"', i)) != -1)
 		return None
 	
+	def get_badge_page(self, user_id = None):
+		if user_id == None:
+			user_id = self.user_id
+		req_badges = self._session.get('http://www.freggers.de/sidebar/badge/user_badges?user_id=' + user_id)
+		if req_badges.status_code == 200:
+			return req_badges.text
+		return None
+	
+	def get_badge_tasks(self, badge_id, user_id = None):
+		if user_id == None:
+			user_id = self.user_id
+		req_badge = self._session.get('http://www.freggers.de/sidebar/badge/user_badge_detail?badge_id={};user_id={}'.format(badge_id, user_id))
+		if req_badge.status_code == 200:
+			badge_info = req_badge.text
+			tasks = []
+			start = badge_info.find('ba-description')
+			i = badge_info.find('ba-requirement-todo', start)
+			while i != -1:
+				tasks.append((i, False))
+				i = badge_info.find('ba-requirement-todo', i + 19)
+			i = badge_info.find('ba-requirement-done', start)
+			while i != -1:
+				tasks.append((i, True))
+				i = badge_info.find('ba-requirement-done', i + 19)
+			result = []
+			for x in sorted(tasks, key = lambda x: x[0]):
+				result.append(x[1])
+			return result
+		return None
+
 	def get_has_fregger_check(self):
 		return self.get_is_badge_completed(19)
 	
@@ -2075,7 +2121,8 @@ class FreggersBot(Freggers):
 				return True
 			elif quest == 'DAILY_DELIVER_ANTS':
 				self.log('[Quest] Delivering 2 ants...')
-				ant_count = len(self.filter_items(self.ajax_request_inventory(), self.localeItems.LAZY_ANTS)) + len(self.filter_items(self.ajax_request_item_queue(), self.localeItems.LAZY_ANTS))
+				ant_count = (len(self.filter_items(self.ajax_request_inventory(), self.localeItems.LAZY_ANTS)) + 
+							len(self.filter_items(self.ajax_request_item_queue(), self.localeItems.LAZY_ANTS)))
 				remaining = 2 - ant_count
 				if remaining > 0:
 					self.collect_ants(max_amount = remaining)
@@ -2118,9 +2165,130 @@ class FreggersBot(Freggers):
 				print('[Quest] Unknown quest:', quest)
 		return False
 	
-	def daily_routine(self, skip_first_cycle = False, idle_room = 'plattenbau%2.eigenheim', idle_room_alt = 'plattenbau.plattenbau', care_pets = False, care_pompom = False, maintain_amount = 25, overload_amount = 100, min_deliver_amount = 3, loop_min_idle_sec = 60 * 60, loop_max_idle_sec = 2 * 60 * 60):
-		self.log('Beginning daily routine...')
+	def complete_badges(self):
+		search = ItemSearch(self, 0)
+		def search_badge_item(wob_id):
+			search.wob_id = wob_id
+			search.search()
+			self.wait_random_delay(0.5, 3.5)
+		badge_page = self.get_badge_page()
+		if not self.get_is_badge_completed(8, badge_page = badge_page):
+			self.log('[Badge] Completing explorer badge - Wutzlhofen...')
+			tasks = self.get_badge_tasks(8)
+			if not tasks[0]:
+				self.go_to_room('wutzlhofen.flussdampfer', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('wutzlhofen.flussdampfer_kabeltrommel').wob_id)
+			if not tasks[1]:
+				self.go_to_room('wutzlhofen.biergarten', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('wutzlhofen.biergarten_biergartenschirmstaender').wob_id)
+			if not tasks[2]:
+				self.go_to_room('wutzlhofen.bistro', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('wutzlhofen.bistro_sofadreisitzer'))).wob_id)
+		if not self.get_is_badge_completed(9):
+			self.log('[Badge] Completing explorer badge - Hood...')
+			tasks = self.get_badge_tasks(9)
+			if not tasks[0]:
+				self.go_to_room('hood.outskirts', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('hood.outskirts_muellhaufen').wob_id)
+			if not tasks[1]:
+				self.go_to_room('hood.strasse', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('hood.strasse_muelltonneliegend').wob_id)
+			if not tasks[2]:
+				self.go_to_room('hood.waschsalon', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('hood.waschsalon_waschmaschine'))).wob_id)
+		if not self.get_is_badge_completed(10):
+			self.log('[Badge] Completing explorer badge - Tumbleweed Valley')
+			tasks = self.get_badge_tasks(10)
+			if not tasks[0]:
+				self.go_to_room('western.fort', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.iso_obj.get_uvz().x == 239, self.find_items_by_gui('western.kanonenkugeln'))).wob_id)
+			if not tasks[1]:
+				self.go_to_room('western.saloonzimmer1', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('western.badezuber').wob_id)
+			if not tasks[2]:
+				self.go_to_room('western.backlands', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('western.backlands_sitzstein1').wob_id)
+		if not self.get_is_badge_completed(20):
+			self.log('[Badge] Completing explorer badge - Schattenland')
+			tasks = self.get_badge_tasks(20)
+			if not tasks[0]:
+				self.go_to_room('gothics.friedhof', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('gothics.friedhof_uferbank'))).wob_id)
+			if not tasks[1]:
+				self.go_to_room('gothics.gruft', False)
+				self.wait_room_loaded()
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('hood.getraenkedoserot'))).wob_id)
+			if not tasks[2]:
+				self.go_to_room('gothics.kirche', False)
+				self.wait_room_loaded()
+				search_badge_item(self.find_item_by_gui('gothics.kirche_reliquienschrein').wob_id)
+		search.cleanup()
+
+		if not self.get_is_badge_completed(21):
+			self.log('[Badge] Completing games badge')
+			tasks = self.get_badge_tasks(21)
+			if not tasks[0]:
+				self.send_set_status(Status.PLAYING, 'astrovoids')
+				self.send_delete_status(Status.PLAYING)
+			if not tasks[1]:
+				self.send_set_status(Status.PLAYING, 'jewels')
+				self.send_delete_status(Status.PLAYING)
+			if not tasks[2]:
+				self.send_set_status(Status.PLAYING, 'puzzle')
+				self.send_delete_status(Status.PLAYING)
+			if not tasks[3]:
+				self.send_set_status(Status.PLAYING, 'deserthunter')
+				self.send_delete_status(Status.PLAYING)
+			if not tasks[4]:
+				self.send_set_status(Status.PLAYING, 'whackthehampster')
+				self.send_delete_status(Status.PLAYING)
 		
+		if not self.get_is_badge_completed(31):
+			self.log('[Badge] Completing sounds badge')
+			tasks = self.get_badge_tasks(31)
+			if not tasks[0]:
+				self.go_to_room('hood.backalley', False)
+				self.wait_room_loaded()
+				self.send_user_command('miau')
+			if not tasks[1]:
+				self.go_to_room('western.saloon', False)
+				self.wait_room_loaded()
+				self.send_user_command('ruelps')
+			if not tasks[2]:
+				self.go_to_room('wutzlhofen.museum', False)
+				self.wait_room_loaded()
+				self.send_user_command('nies')
+			if not tasks[3]:
+				self.go_to_room('gothics.kirche', False)
+				self.wait_room_loaded()
+				self.send_user_command('gaehn')
+			if not tasks[4]:
+				self.go_to_home('plattenbau.eigenheim', False)
+				self.wait_room_loaded()
+				self.send_user_command('furz')
+
+		if not self.__church_visited_today and not self.get_is_badge_completed(41) and datetime.today().weekday() == 6:
+			self.log('[Badge] Completing church visitor badge')
+			self.go_to_room('gothics.kirche', False)
+			self.__church_visited_today = True
+			self.wait_room_loaded()
+			self.wait_random_delay(0.5, 3)	
+
+	def daily_routine(self, skip_first_cycle = False, idle_room = 'plattenbau%2.eigenheim', idle_room_alt = 'plattenbau.plattenbau', 
+		care_pets = False, care_pompom = False, maintain_amount = 25, overload_amount = 100, min_deliver_amount = 3, 
+		loop_min_idle_sec = 60 * 60, loop_max_idle_sec = 2 * 60 * 60):
+		self.log('Beginning daily routine...')
+
 		self.send_delete_status(Status.PRANKED)
 		self.send_delete_status(Status.PLAYING)
 		self.send_delete_status(Status.GHOST)
@@ -2175,6 +2343,7 @@ class FreggersBot(Freggers):
 				empty_slots = FreggersBot.count_empty_slots(self.ajax_request_inventory())
 			
 			if day_change:
+				self.__church_visited_today = False
 				if self.search_covered_wagon():
 					total_covered_wagon += 1
 				if self.search_noisy_construction_site():
@@ -2216,16 +2385,16 @@ class FreggersBot(Freggers):
 					total_ants_collected += collected_ants                                            
 					self.log('Collected {} ants.'.format(collected_ants))
 				
-				self.log('[Stats]')
-				self.log('[Stats] Current ants:', ant_amount)
-				self.log('[Stats] Total ants collected:', total_ants_collected)
-				self.log('[Stats] Total ants delivered:', total_ants_delivered)
-				self.log('[Stats] Total construction site searches:', total_construction_site)
-				self.log('[Stats] Total covered wagon searches:', total_covered_wagon)
-				self.log('[Stats] Total level-ups:', (self.level_data['level'] - start_level))
+				self.log('[Stats] Ants: current = {} | collected = {} | delivered = {}'.format(ant_amount, total_ants_collected, total_ants_delivered))
+				self.log('[Stats] Construction site searches:', total_construction_site)
+				self.log('[Stats] Covered wagon searches:', total_covered_wagon)
+				self.log('[Stats] Level-ups:', (self.level_data['level'] - start_level))
 				self.log('[Stats] Total time idling:', format_time(total_time_idle))
 				self.log('[Stats] Total time running:', format_time(time.time() - start_time))
 				
+				self.complete_badges()
+				self.delete_trash_items()
+
 				self.go_to_home(idle_room, True)
 				
 				if care_pets:
@@ -2246,10 +2415,10 @@ class FreggersBot(Freggers):
 				self.go_to_room(idle_room_alt, False)
 			
 			last_day = now_day
-	
+
 	def print_items(self):
 		for wob in self.wob_registry.iso_items:
-			print(wob.wob_id, wob.gui, wob.name, wob.get_primary_interaction(), wob.get_properties())
+			print(wob.wob_id, wob.gui, wob.name, wob.interactions, wob.get_properties())
 	
 	def wait_room_loaded(self):
 		self.__e_room_loaded.wait()

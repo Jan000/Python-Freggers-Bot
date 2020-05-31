@@ -78,6 +78,7 @@ class FreggersBot(Freggers):
 		self.room_waits = {}
 		self.speed_factor = 0.3 + random.random()
 		self.__ants_times = {}
+		self.__church_visited_today = False
 		self.__e_room_ready = threading.Event()
 		self.__e_room_loaded = threading.Event()
 		self.__e_show_metromap = threading.Event()
@@ -96,6 +97,10 @@ class FreggersBot(Freggers):
 			localeItems.DUNG_BEATLE,
 			localeItems.ACORN
 		}
+		self.trash_items.update(localeItems.EXPLORER_BADGE_ITEMS_0)
+		self.trash_items.update(localeItems.EXPLORER_BADGE_ITEMS_1)
+		self.trash_items.update(localeItems.EXPLORER_BADGE_ITEMS_2)
+		self.trash_items.update(localeItems.EXPLORER_BADGE_ITEMS_3)
 		self.prefered_store_items = {
 			localeItems.GNOME
 		}
@@ -323,17 +328,24 @@ class FreggersBot(Freggers):
 		self.log('Deleting item \'{}\' count={} id={} ...'.format(item['description'], item['count'], item['id']))
 		return self.ajax_delete_item(item['id'])
 	
-	def delete_trash_items(self, inv = None):
+	def delete_trash_items(self, inv = None, queue = None):
 		if inv == None:
 			inv = self.ajax_request_inventory()
-		count = 0
+		if queue == None:
+			queue = self.ajax_request_item_queue()
+		count_inv = 0
 		for item in list(inv):
 			if item != None and item['description'] in self.trash_items:
 				self.delete_item(item)
 				inv.remove(item)
-				count += 1
-				
-		return count
+				count_inv += 1
+		count_queue = 0
+		for item in list(queue):
+			if item['description'] in self.trash_items:
+				self.ajax_inbox_action(item['id'], Freggers.INBOX_ACTION_DECLINE)
+				queue.remove(item)
+				count_queue += 1
+		return (count_inv, count_queue)
 	
 	@staticmethod
 	def count_empty_slots(container):
@@ -817,7 +829,7 @@ class FreggersBot(Freggers):
 		remaining_slots = count - FreggersBot.count_empty_slots(inv)
 		if remaining_slots > 0:
 			self.log('Ensuring {}/{} empty slot(s) in inventory...'.format(remaining_slots, count))
-			deleted_slot_count = self.delete_trash_items(inv = inv)
+			deleted_slot_count = self.delete_trash_items(inv = inv)[0]
 			remaining_slots -= deleted_slot_count
 			self.log('Deleted {} trash items.'.format(deleted_slot_count))
 			if remaining_slots > 0:
@@ -2181,7 +2193,7 @@ class FreggersBot(Freggers):
 			if not tasks[0]:
 				self.go_to_room('hood.outskirts', False)
 				self.wait_room_loaded()
-				search_badge_item(self.find_item_by_gui('hood.outskirts_muellhaufen').wob_id)
+				search_badge_item(next(filter(lambda x: x.has_interaction('SEARCH'), self.find_items_by_gui('hood.outskirts_muellhaufen'))).wob_id)
 			if not tasks[1]:
 				self.go_to_room('hood.strasse', False)
 				self.wait_room_loaded()
@@ -2222,11 +2234,61 @@ class FreggersBot(Freggers):
 				search_badge_item(self.find_item_by_gui('gothics.kirche_reliquienschrein').wob_id)
 		search.cleanup()
 
+		if not self.get_is_badge_completed(21):
+			self.log('[Badge] Completing games badge')
+			tasks = self.get_badge_tasks(21)
+			if not tasks[0]:
+				self.send_set_status(Status.PLAYING, 'astrovoids')
+				self.send_delete_status(Status.PLAYING)
+			if not tasks[1]:
+				self.send_set_status(Status.PLAYING, 'jewels')
+				self.send_delete_status(Status.PLAYING)
+			if not tasks[2]:
+				self.send_set_status(Status.PLAYING, 'puzzle')
+				self.send_delete_status(Status.PLAYING)
+			if not tasks[3]:
+				self.send_set_status(Status.PLAYING, 'deserthunter')
+				self.send_delete_status(Status.PLAYING)
+			if not tasks[4]:
+				self.send_set_status(Status.PLAYING, 'whackthehampster')
+				self.send_delete_status(Status.PLAYING)
+		
+		if not self.get_is_badge_completed(31):
+			self.log('[Badge] Completing sounds badge')
+			tasks = self.get_badge_tasks(31)
+			if not tasks[0]:
+				self.go_to_room('hood.backalley', False)
+				self.wait_room_loaded()
+				self.send_user_command('miau')
+			if not tasks[1]:
+				self.go_to_room('western.saloon', False)
+				self.wait_room_loaded()
+				self.send_user_command('ruelps')
+			if not tasks[2]:
+				self.go_to_room('wutzlhofen.museum', False)
+				self.wait_room_loaded()
+				self.send_user_command('nies')
+			if not tasks[3]:
+				self.go_to_room('gothics.kirche', False)
+				self.wait_room_loaded()
+				self.send_user_command('gaehn')
+			if not tasks[4]:
+				self.go_to_home('plattenbau.eigenheim', False)
+				self.wait_room_loaded()
+				self.send_user_command('furz')
+
+		if not self.__church_visited_today and not self.get_is_badge_completed(41) and datetime.today().weekday() == 6:
+			self.log('[Badge] Completing church visitor badge')
+			self.go_to_room('gothics.kirche', False)
+			self.__church_visited_today = True
+			self.wait_room_loaded()
+			self.wait_random_delay(0.5, 3)	
+
 	def daily_routine(self, skip_first_cycle = False, idle_room = 'plattenbau%2.eigenheim', idle_room_alt = 'plattenbau.plattenbau', 
 		care_pets = False, care_pompom = False, maintain_amount = 25, overload_amount = 100, min_deliver_amount = 3, 
 		loop_min_idle_sec = 60 * 60, loop_max_idle_sec = 2 * 60 * 60):
 		self.log('Beginning daily routine...')
-		
+
 		self.send_delete_status(Status.PRANKED)
 		self.send_delete_status(Status.PLAYING)
 		self.send_delete_status(Status.GHOST)
@@ -2281,6 +2343,7 @@ class FreggersBot(Freggers):
 				empty_slots = FreggersBot.count_empty_slots(self.ajax_request_inventory())
 			
 			if day_change:
+				self.__church_visited_today = False
 				if self.search_covered_wagon():
 					total_covered_wagon += 1
 				if self.search_noisy_construction_site():
@@ -2330,6 +2393,7 @@ class FreggersBot(Freggers):
 				self.log('[Stats] Total time running:', format_time(time.time() - start_time))
 				
 				self.complete_badges()
+				self.delete_trash_items()
 
 				self.go_to_home(idle_room, True)
 				
