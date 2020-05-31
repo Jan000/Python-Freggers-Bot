@@ -1,2 +1,3 @@
 upload_pypi.bat
 build.bat
+install_local.bat
