@@ -2127,16 +2127,16 @@ class FreggersBot(Freggers):
 		self.send_delete_status(Status.SPOOK)
 		self.send_delete_status(Status.WITCHBROOM)
 		self.send_delete_status(Status.CLOAK)
-		self.send_set_status(Status.QUICK_STRONG)
 		self.send_set_status(Status.NOSOUND)
 		
+		next_quick_strong = 0
+
 		loop_min_idle_sec *= 1000
 		loop_max_idle_sec *= 1000
 		
 		last_day = -1
 		ant_amount = self.get_items_count(self.localeItems.LAZY_ANTS)
 		
-		total_level_ups = 0
 		total_ants_delivered = 0
 		total_ants_collected = 0
 		total_covered_wagon = 0
@@ -2145,8 +2145,16 @@ class FreggersBot(Freggers):
 		start_time = time.time()
 		
 		last_delivery = -1
+
+		self.__e_level_data.wait()
+		start_level = self.level_data['level']
 		
 		while True:
+			if next_quick_strong <= time.time():
+				self.send_set_status(Status.QUICK_STRONG)
+				next_quick_strong = time.time() + 604800
+				self.log('Added strong speed effect.')
+
 			self.complete_quest()
 			
 			now_day = date.today().day
@@ -2173,11 +2181,9 @@ class FreggersBot(Freggers):
 					total_construction_site += 1
 			
 			self.__e_level_data.wait()
-			level_up = self.level_data['xp_total'] == self.level_data['xp_cap']
+			level_up_expected = self.level_data['xp_total'] == self.level_data['xp_cap']
 			ants_to_deliver = 20 if day_change else math.ceil((self.level_data['xp_cap'] - self.level_data['xp_current']) / 559)
-			if level_up:
-				total_level_ups += 1
-			elif ants_to_deliver < min_deliver_amount:
+			if not level_up_expected and ants_to_deliver < min_deliver_amount:
 				self.log('Not enough ants to deliver ({} / {}). Waiting for a higher xp cap.'.format(ants_to_deliver, min_deliver_amount))
 				ants_to_deliver = 0
 				
@@ -2193,12 +2199,14 @@ class FreggersBot(Freggers):
 					self.log('Last delivery is {} ago.'.format(format_time(time.time() - last_delivery)))
 				self.log('Delivering {} ants...'.format(ants_to_deliver))
 				delivered_ants = self.deliver_ants(amount = ants_to_deliver)
+				if delivered_ants == 0:
+					level_up_expected = False
 				ant_amount -= delivered_ants
 				total_ants_delivered += delivered_ants
 				last_delivery = time.time()
 				self.log('Delivered {} ants.'.format(delivered_ants))
 			
-			if not level_up:
+			if not level_up_expected:
 			
 				if ant_amount < maintain_amount:
 					collect_amount = maintain_amount - ant_amount + overload_amount
@@ -2214,7 +2222,7 @@ class FreggersBot(Freggers):
 				self.log('[Stats] Total ants delivered:', total_ants_delivered)
 				self.log('[Stats] Total construction site searches:', total_construction_site)
 				self.log('[Stats] Total covered wagon searches:', total_covered_wagon)
-				self.log('[Stats] Total level-ups:', total_level_ups)
+				self.log('[Stats] Total level-ups:', (self.level_data['level'] - start_level))
 				self.log('[Stats] Total time idling:', format_time(total_time_idle))
 				self.log('[Stats] Total time running:', format_time(time.time() - start_time))
 				
@@ -2231,7 +2239,6 @@ class FreggersBot(Freggers):
 					self.send_item_interaction(random.choice(seats).wob_id, 'SIT_DOWN')
 				
 				idle_time = random.randint(loop_min_idle_sec, loop_max_idle_sec) / 1000
-				
 				self.log('Idling for {}...'.format(format_time(idle_time)))
 				time.sleep(idle_time)
 				total_time_idle += idle_time
