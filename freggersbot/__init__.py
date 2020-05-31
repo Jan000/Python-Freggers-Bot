@@ -172,7 +172,8 @@ class FreggersBot(Freggers):
 		self.__e_timer_bar.set()
 	
 	def __handle_room_ctxt(self, room):
-		self.debug('Handle CTXT_ROOM:',room.room_context_label,room.gui(),room.room_gui,self.area_name,room.wob_id,room.desc,room.topic,room.user_owns_room,room.owner_user_id,room.owner_user_name)
+		self.debug('Handle CTXT_ROOM:',room.room_context_label,room.gui(),room.room_gui,self.area_name,room.wob_id,
+			room.desc,room.topic,room.user_owns_room,room.owner_user_id,room.owner_user_name)
 		self.__e_room_loaded.clear()
 		self.__e_level_data.clear()
 		self.__e_room_ready.set()
@@ -278,7 +279,8 @@ class FreggersBot(Freggers):
 			self.__e_show_metromap.clear()
 			self.send_show_metroplan()
 			self.__e_show_metromap.wait()
-		if self.room.room_context_label != plain_room_gui or (owner_id != None and self.room.owner_user_id != owner_id) or (exact and area_index != self.area_index and owner_id == None):
+		if (self.room.room_context_label != plain_room_gui or (owner_id != None and self.room.owner_user_id != owner_id) or 
+		   (exact and area_index != self.area_index and owner_id == None)):
 			self.log('Going to room {} exact={} ...'.format(room_gui, exact))
 			wait = {
 				'e': threading.Event(),
@@ -1378,13 +1380,20 @@ class FreggersBot(Freggers):
 				return loc
 		return None
 		
-	def get_is_badge_completed(self, badge_id):
-		req_profile = self._session.get('http://www.freggers.de/sidebar/badge/user_badges?user_id=' + self.user_id)
-		if req_profile.status_code == 200:
-			text_profile = req_profile.text
-			badge_start = text_profile.find('badge_id_' + str(badge_id))
-			badge_end = text_profile.find('ba-badge-desc', badge_start)
-			return text_profile[badge_start:badge_end].find('ba-progress-container') == -1
+	def get_is_badge_completed(self, badge_id, badge_page = None):
+		if badge_page == None:
+			badge_page = self.get_badge_page()
+		if badge_page != None:
+			badge_start = badge_page.find('badge_id_' + str(badge_id))
+			if badge_start != -1:
+				return (badge_page.find('ba-progress-container', badge_start, badge_page.find('ba-badge-desc', badge_start)) == -1 and 
+					badge_page.find('ba-requirement-achieved', badge_page.find('"', badge_page.find('ba-requirement', badge_start))) != -1)
+		return None
+	
+	def get_badge_page(self):
+		req_badges = self._session.get('http://www.freggers.de/sidebar/badge/user_badges?user_id=' + self.user_id)
+		if req_badges.status_code == 200:
+			return req_badges.text
 		return None
 	
 	def get_has_fregger_check(self):
@@ -2075,7 +2084,8 @@ class FreggersBot(Freggers):
 				return True
 			elif quest == 'DAILY_DELIVER_ANTS':
 				self.log('[Quest] Delivering 2 ants...')
-				ant_count = len(self.filter_items(self.ajax_request_inventory(), self.localeItems.LAZY_ANTS)) + len(self.filter_items(self.ajax_request_item_queue(), self.localeItems.LAZY_ANTS))
+				ant_count = (len(self.filter_items(self.ajax_request_inventory(), self.localeItems.LAZY_ANTS)) + 
+							len(self.filter_items(self.ajax_request_item_queue(), self.localeItems.LAZY_ANTS)))
 				remaining = 2 - ant_count
 				if remaining > 0:
 					self.collect_ants(max_amount = remaining)
@@ -2118,7 +2128,14 @@ class FreggersBot(Freggers):
 				print('[Quest] Unknown quest:', quest)
 		return False
 	
-	def daily_routine(self, skip_first_cycle = False, idle_room = 'plattenbau%2.eigenheim', idle_room_alt = 'plattenbau.plattenbau', care_pets = False, care_pompom = False, maintain_amount = 25, overload_amount = 100, min_deliver_amount = 3, loop_min_idle_sec = 60 * 60, loop_max_idle_sec = 2 * 60 * 60):
+	def complete_badges(self):
+		badge_page = self.get_badge_page()
+		if not self.get_is_badge_completed(8, badge_page = badge_page):
+			self.log('[Badge] Completing badge 8 ...')
+
+	def daily_routine(self, skip_first_cycle = False, idle_room = 'plattenbau%2.eigenheim', idle_room_alt = 'plattenbau.plattenbau', 
+		care_pets = False, care_pompom = False, maintain_amount = 25, overload_amount = 100, min_deliver_amount = 3, 
+		loop_min_idle_sec = 60 * 60, loop_max_idle_sec = 2 * 60 * 60):
 		self.log('Beginning daily routine...')
 		
 		self.send_delete_status(Status.PRANKED)
@@ -2216,16 +2233,15 @@ class FreggersBot(Freggers):
 					total_ants_collected += collected_ants                                            
 					self.log('Collected {} ants.'.format(collected_ants))
 				
-				self.log('[Stats]')
-				self.log('[Stats] Current ants:', ant_amount)
-				self.log('[Stats] Total ants collected:', total_ants_collected)
-				self.log('[Stats] Total ants delivered:', total_ants_delivered)
-				self.log('[Stats] Total construction site searches:', total_construction_site)
-				self.log('[Stats] Total covered wagon searches:', total_covered_wagon)
-				self.log('[Stats] Total level-ups:', (self.level_data['level'] - start_level))
+				self.log('[Stats] Ants: current = {} | collected = {} | delivered = {}'.format(ant_amount, total_ants_collected, total_ants_delivered))
+				self.log('[Stats] Construction site searches:', total_construction_site)
+				self.log('[Stats] Covered wagon searches:', total_covered_wagon)
+				self.log('[Stats] Level-ups:', (self.level_data['level'] - start_level))
 				self.log('[Stats] Total time idling:', format_time(total_time_idle))
 				self.log('[Stats] Total time running:', format_time(time.time() - start_time))
 				
+				self.complete_badges()
+
 				self.go_to_home(idle_room, True)
 				
 				if care_pets:
@@ -2246,7 +2262,7 @@ class FreggersBot(Freggers):
 				self.go_to_room(idle_room_alt, False)
 			
 			last_day = now_day
-	
+
 	def print_items(self):
 		for wob in self.wob_registry.iso_items:
 			print(wob.wob_id, wob.gui, wob.name, wob.get_primary_interaction(), wob.get_properties())
