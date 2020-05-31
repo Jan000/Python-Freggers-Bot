@@ -1390,12 +1390,36 @@ class FreggersBot(Freggers):
 					badge_page.find('ba-requirement-achieved', badge_page.find('"', badge_page.find('ba-requirement', badge_start))) != -1)
 		return None
 	
-	def get_badge_page(self):
-		req_badges = self._session.get('http://www.freggers.de/sidebar/badge/user_badges?user_id=' + self.user_id)
+	def get_badge_page(self, user_id = None):
+		if user_id == None:
+			user_id = self.user_id
+		req_badges = self._session.get('http://www.freggers.de/sidebar/badge/user_badges?user_id=' + user_id)
 		if req_badges.status_code == 200:
 			return req_badges.text
 		return None
 	
+	def get_badge_tasks(self, badge_id, user_id = None):
+		if user_id == None:
+			user_id = self.user_id
+		req_badge = self._session.get('http://www.freggers.de/sidebar/badge/user_badge_detail?badge_id={};user_id={}'.format(badge_id, user_id))
+		if req_badge.status_code == 200:
+			badge_info = req_badge.text
+			tasks = []
+			start = badge_info.find('ba-description')
+			i = badge_info.find('ba-requirement-todo', start)
+			while i != -1:
+				tasks.append((i, False))
+				i = badge_info.find('ba-requirement-todo', i + 19)
+			i = badge_info.find('ba-requirement-done', start)
+			while i != -1:
+				tasks.append((i, True))
+				i = badge_info.find('ba-requirement-done', i + 19)
+			result = []
+			for x in sorted(tasks, key = lambda x: x[0]):
+				result.append(x[1])
+			return result
+		return None
+
 	def get_has_fregger_check(self):
 		return self.get_is_badge_completed(19)
 	
@@ -2132,6 +2156,10 @@ class FreggersBot(Freggers):
 		badge_page = self.get_badge_page()
 		if not self.get_is_badge_completed(8, badge_page = badge_page):
 			self.log('[Badge] Completing badge 8 ...')
+			tasks = self.get_badge_tasks(8)
+			print('badge 8:')
+			for x, done in enumerate(tasks):
+				print(x, done)
 
 	def daily_routine(self, skip_first_cycle = False, idle_room = 'plattenbau%2.eigenheim', idle_room_alt = 'plattenbau.plattenbau', 
 		care_pets = False, care_pompom = False, maintain_amount = 25, overload_amount = 100, min_deliver_amount = 3, 
