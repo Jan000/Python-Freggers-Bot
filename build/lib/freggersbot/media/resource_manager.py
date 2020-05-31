@@ -59,7 +59,7 @@ class ResourceManager:
 	
 	def request_level(self, session, level, err_callback = None, keep_cache = False, use_cache = False):
 		if not self.__inited or ResourceManager.PARAM_ROOM_BASE_URL not in self.__config:
-			print('Resource manager was not initialized or invalid config')
+			print('[i] [ResourceManager] Not initialized or invalid config.')
 			return False
 		if use_cache:
 			lvl = self.__level_cache.get(level.identifier)
@@ -78,10 +78,10 @@ class ResourceManager:
 			media_container = media_container_dec.decode_data_bytes(resp.content)
 			level.decode(media_container)
 			self.__level_cache.put(level.identifier, level.clone())
-			print('Successfully loaded level ', level.identifier)
+			print('[i] [ResourceManager] Successfully loaded level {}.'.format(level.identifier))
 			return True
 		else:
-			print('Invalid response received while loading level:', resp.status_code)
+			print('[e] [ResourceManager] Invalid response received while loading level:', resp.status_code)
 		return False
 		
 	def __remove_resource(self, index):

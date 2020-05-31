@@ -475,7 +475,6 @@ class FreggersBot(Freggers):
 						self.log('[Ants] Interacting with cactus')
 						self.__e_collect.clear()
 						self.send_item_interaction(cactus_wob_id, 'SEARCH')
-						#self.send_user_command('relax')
 						self.__e_collect.wait()
 						remaining_wait_time = self.__collect_remaining_wait
 						if remaining_wait_time == 0:
@@ -1717,6 +1716,8 @@ class FreggersBot(Freggers):
 				self.send_use_handheld_with(self.__snail_consumer_wob_id)
 				self.__e_quest_done.wait()
 				self.unregister_callback(Event.SET_HAND_HELD, snail_cb_set_hand_held)
+				del self.__snail_count
+				del self.__snail_consumer_wob_id
 				self.log('[Quest] Completed.')
 				return True
 			elif quest == 'DAILY_RETURN_EMPTY_BOTTLES':
@@ -1833,6 +1834,12 @@ class FreggersBot(Freggers):
 				self.unregister_callback(Event.SHOW_ACTION_FEEDBACK, dung_cb_show_action)
 				self.unregister_callback(Event.ACTION_UPDATE_WOB, dung_cb_update_wob)
 				self.unregister_callback(Event.CLEAR_HAND_HELD, dung_cb_clear_hand_held)
+				del self.__dung_count
+				del self.__dung_consumer_wob_id
+				del self.__dung_expect_event
+				del self.__dung_success
+				del self.__dung_sheep_wob_id
+				del self.__dung_sheep_state
 				self.__e_quest_done.wait()
 				self.log('[Quest] Completed.')
 				return True
@@ -1867,10 +1874,11 @@ class FreggersBot(Freggers):
 				self.register_callback(Event.SHOW_ACTION_FEEDBACK, watering_cb_show_action)
 				self.register_callback(Event.ACTION_UPDATE_WOB, watering_cb_update_wob)
 				self.register_callback(Event.SET_HAND_HELD, watering_cb_set_hand_held)
-				
+
 				for _ in range(2):
 					while self.__water_count < 3:
 						self.__watering_expect_event = 1
+						watering_event.clear()
 						self.send_item_interaction(water_source.wob_id, 'PUMP')
 						watering_event.wait()
 						self.wait_random_delay(2.1, 3.5)
@@ -1892,12 +1900,64 @@ class FreggersBot(Freggers):
 						self.__watering_expect_event = 3
 						self.send_use_handheld_with(plant_wob_id)
 						watering_event.wait()
-						self.__water_count -= 1
 						self.log('[Quest] Watered exotic plant.')
 						self.wait_random_delay(0.3, 1.5)
+					self.__water_count = 0
 				self.unregister_callback(Event.SHOW_ACTION_FEEDBACK, watering_cb_show_action)
 				self.unregister_callback(Event.ACTION_UPDATE_WOB, watering_cb_update_wob)
 				self.unregister_callback(Event.SET_HAND_HELD, watering_cb_set_hand_held)
+				del self.__watering_pump_success
+				del self.__watering_expect_event
+				del self.__water_count
+				del self.__watering_target_wob_ids
+				self.__e_quest_done.wait()
+				self.log('[Quest] Completed.')
+				return True
+			elif quest == 'DAILY_DELIVER_FERTILIZER':
+				self.log('[Quest] Delivering fertilizer to 6 exotic plants...')
+				self.go_to_room('tp_botanik.azubi', False)
+				self.__e_room_loaded.wait()
+				fertilizer_source = self.find_item_by_gui('tp_botanik.komposthaufen')
+				fertilize_event = threading.Event()
+				self.__fertilize_expect_event = 0
+				self.__fertilizer_count = 0
+				self.__fertilizer_target_wob_ids = None
+				def fertilize_cb_set_handheld(data):
+					if self.__fertilize_expect_event == 1 and data['gui'] == 'tp_botanik.dungersack':
+						self.__fertilize_expect_event = 0
+						self.__fertilizer_count = data['count']
+						if self.__fertilizer_target_wob_ids == None:
+							self.__fertilizer_target_wob_ids = data['consumer_wobids']
+						fertilize_event.set()
+				def fertilize_cb_timer_bar(data):
+					if self.__fertilize_expect_event == 2:
+						self.__fertilize_expect_event = 0
+						fertilize_event.set()
+					print(data)
+				self.register_callback(Event.SHOW_TIMER_BAR, fertilize_cb_timer_bar)
+				self.register_callback(Event.SET_HAND_HELD, fertilize_cb_set_handheld)
+				for _ in range(2):
+					while self.__fertilizer_count < 4:
+						self.__fertilize_expect_event = 1
+						fertilize_event.clear()
+						self.send_item_interaction(fertilizer_source.wob_id, 'TAKE_DUENGER') #Timerbar: 800
+						fertilize_event.wait()
+						self.wait_random_delay(0.8, 2)
+					for _ in range(self.__fertilizer_count):
+						plant_wob_id = self.__fertilizer_target_wob_ids.pop(random.randint(0, len(self.__fertilizer_target_wob_ids) - 1))
+						self.log('[Quest] Giving fertilizer to exotic plant...')
+						fertilize_event.clear()
+						self.__fertilize_expect_event = 2
+						self.send_use_handheld_with(plant_wob_id) #Timerbar: 1600
+						fertilize_event.wait()
+						self.log('[Quest] Gave fertilizer to exotic plant.') 
+						self.wait_random_delay(1.6, 3)
+					self.__fertilizer_count = 0
+				self.unregister_callback(Event.SHOW_TIMER_BAR, fertilize_cb_timer_bar)
+				self.unregister_callback(Event.SET_HAND_HELD, fertilize_cb_set_handheld)
+				del self.__fertilize_expect_event
+				del self.__fertilizer_count
+				del self.__fertilizer_target_wob_ids
 				self.__e_quest_done.wait()
 				self.log('[Quest] Completed.')
 				return True
@@ -1913,7 +1973,7 @@ class FreggersBot(Freggers):
 						'gothics.schwammerl2']
 				inv = self.ajax_request_inventory()
 				queue = self.ajax_request_item_queue()
-				
+
 				if self.count_item(inv, self.localeItems.MUSHROOM_BIG_BLUE) > 0 or self.count_item(queue, self.localeItems.MUSHROOM_BIG_BLUE) > 0:
 					guis.remove('gothics.schwammerl1')
 				if self.count_item(inv, self.localeItems.MUSHROOM_BIG_RED) > 0 or self.count_item(queue, self.localeItems.MUSHROOM_BIG_RED) > 0:
@@ -1976,6 +2036,7 @@ class FreggersBot(Freggers):
 					self.unregister_callback(Event.ENV_REMOVE_ITEMS, mushrooms_cb_env_remove_item)
 					self.unregister_callback(Event.SHOW_ACTION_FEEDBACK, mushrooms_cb_show_action)
 					del self.__mushrooms_expect_gui
+					del self.__mushrooms_pickup_wob_id
 					del self.__mushrooms_pickup_success
 					del self.__mushrooms_collected
 				self.go_to_room('western.rail', False)
