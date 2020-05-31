@@ -32,16 +32,18 @@ class BasicFreggersBot(FreggersBot):
 	
 	def run(self):
 		try:
-			self.daily_routine(skip_first_cycle = False, #Am ersten Tag den Planwagen/Baustelle überspringen
-							idle_room = 'plattenbau%2.eigenheim',
-							idle_room_alt = 'plattenbau.plattenbau', #'beach.beach2'
-							care_pets = True, #True/False | Kümmert sich nach dem Sammeln und Abgeben um die Haustiere im Plattenbau
-							care_pompom = True, #True/False | Kümmert sich um das Pompom im Plattenbau
-							maintain_amount = 200, #Anzahl an Ameisen, die im Inventar/Warteschlange gehalten werden soll
-							overload_amount = 75,
-							min_deliver_amount = 3, #Ab welcher Anzahl (XP / AmeisenXP) an Ameisen der Bot abgeben soll
-							loop_min_idle_sec = 2.5 * 60 * 60, #Minimale Wartezeit in Sekunden, die der Bot in der Wohnung wartet
-							loop_max_idle_sec = 4 * 60 * 60) #Maximale Wartezeit in Sekunden, die der Bot in der Wohnung wartet
+			self.daily_routine(skip_first_cycle = False,
+							   idle_room = 'plattenbau%2.eigenheim',
+							   idle_room_alt = 'plattenbau.plattenbau',
+							   care_pets = True,
+							   care_pompom = True,
+							   complete_badges = True,
+							   complete_quests = True,
+							   maintain_amount = 200,
+							   overload_amount = 75,
+							   min_deliver_amount = 3,
+							   loop_min_idle_sec = 2.5 * 60 * 60,
+							   loop_max_idle_sec = 4 * 60 * 60)
 		except Exception as e:
 			log_error(e)
 

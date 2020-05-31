@@ -2283,9 +2283,12 @@ class FreggersBot(Freggers):
 			self.wait_random_delay(0.5, 3)	
 
 	def daily_routine(self, skip_first_cycle = False, idle_room = 'plattenbau%2.eigenheim', idle_room_alt = 'plattenbau.plattenbau', 
-		care_pets = False, care_pompom = False, maintain_amount = 25, overload_amount = 100, min_deliver_amount = 3, 
+		care_pets = False, care_pompom = False, complete_quests = False, complete_badges = False, maintain_amount = 25, overload_amount = 100, min_deliver_amount = 3, 
 		loop_min_idle_sec = 60 * 60, loop_max_idle_sec = 2 * 60 * 60):
 		self.log('Beginning daily routine...')
+
+		if skip_first_cycle:
+			self.__church_visited_today = True
 
 		self.send_delete_status(Status.PRANKED)
 		self.send_delete_status(Status.PLAYING)
@@ -2321,7 +2324,8 @@ class FreggersBot(Freggers):
 				next_quick_strong = time.time() + 604800
 				self.log('Added strong speed effect.')
 
-			self.complete_quest()
+			if complete_quests:
+				self.complete_quest()
 			
 			now_day = date.today().day
 			day_change = now_day != last_day and (last_day != -1 or not skip_first_cycle) 
@@ -2390,7 +2394,8 @@ class FreggersBot(Freggers):
 				self.log('[Stats] Total time idling:', format_time(total_time_idle))
 				self.log('[Stats] Total time running:', format_time(time.time() - start_time))
 				
-				self.complete_badges()
+				if complete_badges:
+					self.complete_badges()
 				self.delete_trash_items()
 
 				self.go_to_home(idle_room, True)
