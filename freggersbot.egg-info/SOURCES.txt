@@ -5,6 +5,7 @@ freggersbot/freggers.py
 freggersbot.egg-info/PKG-INFO
 freggersbot.egg-info/SOURCES.txt
 freggersbot.egg-info/dependency_links.txt
+freggersbot.egg-info/requires.txt
 freggersbot.egg-info/top_level.txt
 freggersbot/animation/__init__.py
 freggersbot/animation/movement.py

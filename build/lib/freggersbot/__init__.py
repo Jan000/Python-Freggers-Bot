@@ -1730,8 +1730,8 @@ class FreggersBot(Freggers):
 				self.log('[Quest] Unlocking crafting category...')
 				self.__e_level_data.wait()
 				if self.level_data['level'] == 1:
-					self.collect_ants(max_amount = 1)
-					self.deliver_ants(amount = 1)
+					self.collect_ants(max_amount = 3)
+					self.deliver_ants(amount = 3)
 				self.unlock_crafting_category(25)
 				self.__e_quest_done.wait()
 				self.log('[Quest] Completed.')
