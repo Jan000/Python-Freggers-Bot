@@ -7,15 +7,16 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import requests
+
+from pyamf.remoting import STATUS_OK
+
 import time
 import socket
-import requests
 import threading
 import json
 import select
 from html.parser import HTMLParser
-
-from pyamf.remoting import STATUS_OK
 
 from .data.item_interaction import ItemInteraction
 from .data.item_properties import ItemProperties

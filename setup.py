@@ -13,7 +13,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
 	name = 'freggersbot',
-	version = '1.0.37',
+	version = '1.0.38',
 	author = 'Jan K',
 	author_email = 'contact@jandev.net',
 	license = 'MIT',
@@ -31,5 +31,9 @@ setuptools.setup(
 		'Environment :: Console',
 		'Intended Audience :: End Users/Desktop'
 	],
+	install_requires=[
+    	'requests',
+		'py3amf'
+    ],
 	python_requires = '>=3.7'
 )
