@@ -3,6 +3,7 @@
 ## Requirements
 
 - Python 3.7 or higher. Get it here: <https://www.python.org/downloads/>
+  (Including PIP, which is an optional feature in the installer)
 
 ## Installation
 

@@ -95,7 +95,6 @@ class FreggersBot(Freggers):
 		self.trash_items = {
 			localeItems.BEER_CRATE,
 			localeItems.FISH_BONE,
-			localeItems.EMPTY_BOTTLE,
 			localeItems.DUNG_BEATLE,
 			localeItems.ACORN
 		}
@@ -112,7 +111,8 @@ class FreggersBot(Freggers):
 			localeItems.DRAGON_TORCH,
 			localeItems.HORSESHOE,
 			localeItems.MUSIC_BOX,
-			localeItems.BLANKET
+			localeItems.BLANKET,
+			localeItems.EMPTY_BOTTLE
 		}
 		self.disposable_consuamables = {
 			localeItems.DRAGON_MILK,
@@ -1771,10 +1771,12 @@ class FreggersBot(Freggers):
 			elif quest == 'DAILY_RETURN_EMPTY_BOTTLES':
 				self.log('[Quest] Collecting 3 empty bottles...')
 				self.collect_bottles(max_amount = 3)
-				self.return_bottles(amount = 3, beer_crates = False)
-				self.__e_quest_done.wait()
-				self.log('[Quest] Completed.')
-				return True
+				if self.return_bottles(amount = 3, beer_crates = False) == 3:
+					self.__e_quest_done.wait()
+					self.log('[Quest] Completed.')
+					return True
+				self.log('[Quest] Could not return 3 empty bottles.')
+				return False
 			elif quest == 'DAILY_DELIVER_DUNG':
 				self.log('[Quest] Delivering 8 buckets of dung to the composter...')
 				self.go_to_room('tp_botanik.azubi', False)
