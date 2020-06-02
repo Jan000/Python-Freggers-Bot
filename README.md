@@ -7,7 +7,11 @@
 ## Installation
 
 Open the command prompt (press WIN + R on Windows, type CMD and press ENTER) and type in:
->`pip3 install freggersbot`
+>`pip install freggersbot`
+
+To update use the following command:
+>`pip install --upgrade freggersbot`
+
 
 ## TODO
 
