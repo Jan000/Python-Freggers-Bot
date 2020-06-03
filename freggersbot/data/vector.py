@@ -31,7 +31,7 @@ class Vector3D:
 		self.x = x
 		self.y = y
 		self.z = z
-	
+
 	def subtract(self, vector):
 		return Vector3D(self.x - vector.x, self.y - vector.y, self.z - vector.z)
 	
