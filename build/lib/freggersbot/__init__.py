@@ -159,7 +159,7 @@ class FreggersBot(Freggers):
 		self.__e_room_ready.wait()
 		self.send_show_metroplan()
 		self.__e_show_metromap.wait()
-	
+
 	def __handle_credit_account(self, data):
 		self.balance_data = data
 		self.__e_balance_data.set()
@@ -326,6 +326,15 @@ class FreggersBot(Freggers):
 		self.log('Thrown {} effect(s) out of {} slots.'.format(thrown, slots_thrown))
 		return (slots_thrown, thrown)
 	
+	def get_target_pos(self, wob_id):
+		obj = self.wob_registry.get_object_by_wobid(wob_id)
+		if obj != None:
+			anim = self.animation_manager.animations.get(wob_id, None)
+			if anim != None:
+				return anim.get_target_pos()
+			return obj.iso_obj.get_uvz()
+		return None
+
 	def delete_item(self, item):
 		self.log('Deleting item \'{}\' count={} id={} ...'.format(item['description'], item['count'], item['id']))
 		return self.ajax_delete_item(item['id'])
