@@ -245,6 +245,7 @@ class Freggers:
 		self.__last_client_send = 0
 		self.__expect_disconnect = False
 		self.__client_event_callbacks = {}
+		self.__e_movement_finished = threading.Event()
 		self.__event_listeners = {
 			Event.PING: threading.Event(),
 			Event.LOGOUT: threading.Event(),
@@ -811,8 +812,12 @@ class Freggers:
 		msg.add_int_list_arg([x, y, z])
 		if str != None:
 			msg.add_string_arg(str)
+		self.__e_movement_finished.clear()
 		return self.__send(msg)
 	
+	def wait_movement_finished(self):
+		self.__e_movement_finished.wait()
+
 	#b1 unknown
 	def send_auto_walk_to(self, room_gui, b1 = True, exact = False):
 		msg = UtfMessage()
@@ -990,6 +995,9 @@ class Freggers:
 	def __handle_wob_property_change(self, wob, properties, old_properties):
 		pass
 	
+	def __handle_movement_done(self, animation):
+		self.__e_movement_finished.set()
+
 	def __update_wob_data(self, data, force, delay):
 		wob = self.wob_registry.get_object_by_wobid(data.wob_id)
 		if wob == None:
@@ -1003,13 +1011,15 @@ class Freggers:
 			if path.age() < path.duration:
 				pos = path.start
 				wob.iso_obj.set_position(pos.u, pos.v, pos.z)
-				self.animation_manager.moveground(wob.iso_obj, MovementWayPoint.get_movement_waypoints(path), path.duration, path.age(), self.level, wob)
+				anim = self.animation_manager.moveground(wob.iso_obj, MovementWayPoint.get_movement_waypoints(path), path.duration, path.age(), self.level, wob)
+				anim.on_complete = self.__handle_movement_done
 			else:
 				waypoint_pos = path.waypoints[-1].position
 				wob.iso_obj.set_position(waypoint_pos.u, waypoint_pos.v, waypoint_pos.z)
 		elif force:
 			if self.animation_manager.has_animation(wob.iso_obj):
 				self.animation_manager.clear_animation(wob.iso_obj)
+				self.__e_movement_finished.set()
 			else:
 				wob.iso_obj.set_position(0, 0, 0)
 	

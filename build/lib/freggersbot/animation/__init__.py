@@ -36,6 +36,7 @@ class AnimationManager:
 		animation = Point2PointMovement(target, points, duration, level, ref)
 		animation.update(age)
 		self.animations[target] = animation
+		return animation
 	
 	def update(self, time):
 		if not self.running:

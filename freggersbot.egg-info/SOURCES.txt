@@ -38,6 +38,7 @@ freggersbot/iso/player.py
 freggersbot/iso/wob_registry.py
 freggersbot/locale/__init__.py
 freggersbot/locale/de.py
+freggersbot/locale/en.py
 freggersbot/media/__init__.py
 freggersbot/media/container_decoder.py
 freggersbot/media/decoder.py

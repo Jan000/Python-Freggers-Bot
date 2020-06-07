@@ -126,7 +126,7 @@ class FreggersBot(Freggers):
 		self.disposable_consuamables.update(localeItems.MUSHROOMS)
 		self.consumable_items.update(self.disposable_consuamables)
 		self.start = lambda: None
-		super(FreggersBot, self).__init__(log_prefix = '[' + self.username + ']', is_debug = False)
+		super(FreggersBot, self).__init__(log_prefix = '[' + self.username + ']', is_debug = False, localeItems = localeItems)
 		self.register_callback(Event.CTXT_ROOM, self.__handle_room_ctxt)
 		self.register_callback(Event.SHOW_ACTION_FEEDBACK, self.__handle_show_action)
 		self.register_callback(Event.ACTION_SHOW_METROMAP, self.__handle_show_metromap)
@@ -1394,13 +1394,15 @@ class FreggersBot(Freggers):
 		if self.wob_registry.get_player_by_name(name) != None:
 			return ''
 		else:
-			req_profile = self._session.get('http://www.freggers.de/sidebar/profile/user/' + name)
+			req_profile = self._session.get(self.localeItems.URL + '/sidebar/profile/user/' + name)
 			if req_profile.status_code == 200:
 				text_profile = req_profile.text
-				loc_start = text_profile.find('gotoSpecifiedRoom(\'', text_profile.find('user-go-button')) + 19
-				loc_end = text_profile.find('\'', loc_start)
-				loc = text_profile[loc_start:loc_end]
-				return loc
+				loc_start = text_profile.find('gotoSpecifiedRoom(\'', text_profile.find('user-go-button'))
+				if loc_start != -1:
+					loc_start += 19
+					loc_end = text_profile.find('\'', loc_start)
+					loc = text_profile[loc_start:loc_end]
+					return loc
 		return None
 		
 	def get_is_badge_completed(self, badge_id, badge_page = None):
@@ -1417,7 +1419,7 @@ class FreggersBot(Freggers):
 	def get_badge_page(self, user_id = None):
 		if user_id == None:
 			user_id = self.user_id
-		req_badges = self._session.get('http://www.freggers.de/sidebar/badge/user_badges?user_id=' + user_id)
+		req_badges = self._session.get(self.localeItems.URL + '/sidebar/badge/user_badges?user_id=' + user_id)
 		if req_badges.status_code == 200:
 			return req_badges.text
 		return None
@@ -1425,7 +1427,7 @@ class FreggersBot(Freggers):
 	def get_badge_tasks(self, badge_id, user_id = None):
 		if user_id == None:
 			user_id = self.user_id
-		req_badge = self._session.get('http://www.freggers.de/sidebar/badge/user_badge_detail?badge_id={};user_id={}'.format(badge_id, user_id))
+		req_badge = self._session.get(self.localeItems.URL + '/sidebar/badge/user_badge_detail?badge_id={};user_id={}'.format(badge_id, user_id))
 		if req_badge.status_code == 200:
 			badge_info = req_badge.text
 			tasks = []

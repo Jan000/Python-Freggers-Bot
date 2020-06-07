@@ -7,9 +7,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-class LocaleDE:
+class LocaleEN:
 	
-	DOMAIN = 'www.freggers.de'
+	DOMAIN = 'www.freggers.com'
 	URL = 'http://' + DOMAIN
 
 	DRAGON_MILK = 'Drachen-Brennstoff'
