@@ -57,7 +57,7 @@ class ResourceManager:
 		self.__config = cfg
 		self.__inited = True
 	
-	def request_level(self, session, level, err_callback = None, keep_cache = False, use_cache = False):
+	def request_level(self, freggers, level, err_callback = None, keep_cache = False, use_cache = False):
 		if not self.__inited or ResourceManager.PARAM_ROOM_BASE_URL not in self.__config:
 			print('[i] [ResourceManager] Not initialized or invalid config.')
 			return False
@@ -72,7 +72,7 @@ class ResourceManager:
 				resource = self.__resource_data[x]
 				if resource.cache_mode == ResourceManager.RELEASE_ON_LEVEL_LOAD:
 					self.__remove_resource(x)
-		resp = session.get('http://www.freggers.de' + self.__config[ResourceManager.PARAM_ROOM_BASE_URL] + '/' + level.area_name + '/' + level.room_name + '/' + level.room_name + '.bin' + self.__image_buster)
+		resp = freggers._session.get(freggers.localeItems.URL + self.__config[ResourceManager.PARAM_ROOM_BASE_URL] + '/' + level.area_name + '/' + level.room_name + '/' + level.room_name + '.bin' + self.__image_buster)
 		if resp.status_code == 200:
 			media_container_dec = MediaContainerDecoder()
 			media_container = media_container_dec.decode_data_bytes(resp.content)

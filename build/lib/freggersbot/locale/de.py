@@ -9,6 +9,9 @@
 
 class LocaleDE:
 	
+	DOMAIN = 'www.freggers.de'
+	URL = 'http://' + DOMAIN
+
 	DRAGON_MILK = 'Drachen-Brennstoff'
 	HORSE_MILK = 'Milch'
 	DRAGON_MIXED_MILK = 'Feuriger Chili-Brennstoff'
@@ -106,6 +109,7 @@ class LocaleDE:
 	WOOD = 'Holzstück'
 	
 	SECONDS = 'Sekunden'
+	USE_WAIT_SUFFIX = 'wieder benutzbar.'
 	
 	ROOM_FULL = 'Dieser Raum ist voll.'
 	NO_RIGHTS_TO_ENTER_ROOM = 'Du hast nicht die nötigen Rechte, diesen Raum zu betreten.'

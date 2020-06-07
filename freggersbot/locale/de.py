@@ -109,6 +109,7 @@ class LocaleDE:
 	WOOD = 'Holzstück'
 	
 	SECONDS = 'Sekunden'
+	USE_WAIT_SUFFIX = 'wieder benutzbar.'
 	
 	ROOM_FULL = 'Dieser Raum ist voll.'
 	NO_RIGHTS_TO_ENTER_ROOM = 'Du hast nicht die nötigen Rechte, diesen Raum zu betreten.'

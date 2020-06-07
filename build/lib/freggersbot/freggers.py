@@ -122,6 +122,9 @@ class Freggers:
 	VERSION = '20190130-160700phi'
 	BROWSER = BrowserInfo['browser'] + ' ' + str(BrowserInfo['version'])
 	
+	GENDER_MALE = 'male'
+	GENDER_FEMALE = 'female'
+
 	SEND_LIVE_STATS = False
 	LIVE_STATS = False
 	STAT_UPDATE_INTERVAL = 60
@@ -233,11 +236,12 @@ class Freggers:
 	INBOX_ACTION_ACCEPT = 'accept'
 	INBOX_ACTION_DECLINE = 'decline'
 	
-	def __init__(self, log_prefix = '[Freggers]', is_debug = False):
+	def __init__(self, localeItems, log_prefix = '[Freggers]', is_debug = False):
+		self.localeItems = localeItems
 		self.is_debug = is_debug
 		self.log_prefix = log_prefix
 		self._session = requests.Session()
-		self._session.cookies.set_cookie(requests.cookies.create_cookie(name = 'cookie_enabled_check', value = 'enabled', domain = 'www.freggers.de', path = '/'))
+		self._session.cookies.set_cookie(requests.cookies.create_cookie(name = 'cookie_enabled_check', value = 'enabled', domain = localeItems.DOMAIN, path = '/'))
 		self.__connected = False
 		self.__list_buffers = {}
 		self.__in_msg = UtfMessage()
@@ -246,6 +250,7 @@ class Freggers:
 		self.__expect_disconnect = False
 		self.__client_event_callbacks = {}
 		self.__e_movement_finished = threading.Event()
+		self.__e_exits_loaded = threading.Event()
 		self.__event_listeners = {
 			Event.PING: threading.Event(),
 			Event.LOGOUT: threading.Event(),
@@ -312,6 +317,35 @@ class Freggers:
 		self.hand_held = None
 		self.log('Freggers Client initialized.')
 	
+	class ModelData:
+
+		def __init__(self, hairColor, bodyColor, eyeColor, gender):
+			self.hairColor = hairColor
+
+	@staticmethod
+	def create_account(locale, username, email, password, hairColor, bodyColor, eyeColor, set_num, gender, inviter_id = '0'):
+		session = requests.Session()
+		session.get('http://www.freggers.de')
+		trackUUID = None
+		for cookie in session.cookies:
+			if cookie.name == 'trackuuid':
+				trackUUID = cookie.value
+		resp = requests.post('http://www.freggers.de/ajax_register', {
+			'hc': hairColor,
+			'bc': bodyColor,
+			'fc': eyeColor,
+			'set_num': set_num,
+			'gender': gender,
+			'auth_type': 'internal',
+			'inviter_id': inviter_id,
+			'login': username,
+			'pass': password,
+			'email': email,
+			'terms': 1,
+			'trackuuid': trackUUID
+		})
+		print(resp.text)
+
 	def log(self, *args):
 		print('[i]', self.log_prefix, *args)
 	
@@ -343,12 +377,12 @@ class Freggers:
 		return False
 	
 	def init_session(self, username, password):
-		req1 = self._session.post('http://www.freggers.de/ajax_login', data = {
+		req1 = self._session.post(self.localeItems.URL + '/ajax_login', data = {
 			'login': username,
 			'pass': password
 		})
 		if req1.status_code == 200:
-			req2 = self._session.get('http://www.freggers.de/home?popup=no&skip_confirm_warning=1;skip_nomail_notice=1')
+			req2 = self._session.get(self.localeItems.URL + '/home?popup=no&skip_confirm_warning=1;skip_nomail_notice=1')
 			if req2.status_code == 200:
 				html = req2.text
 				
@@ -396,13 +430,13 @@ class Freggers:
 				self.log('Could not request inventory:', resp_txt)
 	
 	def ajax_request_inventory(self):
-		return self.__ajax_request_bag('http://www.freggers.de/sidebar/inventory/ajax_render_bag?user_id=' + self.user_id, '#iv-bags')
+		return self.__ajax_request_bag(self.localeItems.URL + '/sidebar/inventory/ajax_render_bag?user_id=' + self.user_id, '#iv-bags')
 	
 	def ajax_request_locker(self):
-		return self.__ajax_request_bag('http://www.freggers.de/sidebar/locker/ajax_render_locker', '#iv-locker')
+		return self.__ajax_request_bag(self.localeItems.URL + '/sidebar/locker/ajax_render_locker', '#iv-locker')
 	
 	def ajax_request_item_queue(self):
-		resp = self._session.get('http://www.freggers.de/sidebar/inventory/ajax_render_inbox_items?user_id=' + self.user_id)
+		resp = self._session.get(self.localeItems.URL + '/sidebar/inventory/ajax_render_inbox_items?user_id=' + self.user_id)
 		if resp.status_code == 200:
 			resp_txt = resp.text
 			if resp_txt.find('--JSON--') != -1:
@@ -416,7 +450,7 @@ class Freggers:
 				self.log('Could not request inventory:', resp_txt)
 	
 	def ajax_inbox_action(self, item_id, action):
-		resp = self._session.post('http://www.freggers.de/sidebar/inventory/ajax_inbox_action', {
+		resp = self._session.post(self.localeItems.URL + '/sidebar/inventory/ajax_inbox_action', {
 			'item_id': item_id,
 			'action': action,
 			'session_id': self.params['sessionid']
@@ -424,7 +458,7 @@ class Freggers:
 		return resp.status_code == 200
 	
 	def ajax_item_edit(self, item_id, cmd):
-		resp = self._session.post('http://www.freggers.de/sidebar/inventory/ajax_edit_item', {
+		resp = self._session.post(self.localeItems.URL + '/sidebar/inventory/ajax_edit_item', {
 			'id': item_id,
 			'cmd': cmd,
 			'session_id': self.params['sessionid']
@@ -432,7 +466,7 @@ class Freggers:
 		return resp.status_code == 200
 	
 	def ajax_item_interact(self, item_id, interaction):
-		resp = self._session.post('http://www.freggers.de/sidebar/inventory/ajax_item_interact', {
+		resp = self._session.post(self.localeItems.URL + '/sidebar/inventory/ajax_item_interact', {
 			'id': item_id,
 			'interaction': interaction,
 			'session_id': self.params['sessionid']
@@ -453,7 +487,7 @@ class Freggers:
 		return self.ajax_item_edit(item_id, 'withdraw')
 	
 	def ajax_buy_item(self, relation_id, price):
-		resp = self._session.post('http://www.freggers.de/sidebar/shop/ajax_buy_item', {
+		resp = self._session.post(self.localeItems.URL + '/sidebar/shop/ajax_buy_item', {
 			'relation_id': relation_id,
 			'coins': price,
 			'session_id': self.params['sessionid']
@@ -461,7 +495,7 @@ class Freggers:
 		return resp.status_code == 200
 	
 	def ajax_item_menu(self, item_id, reason):
-		resp = self._session.get('http://www.freggers.de/sidebar/inventory/ajax_item_menu?item_id=' + item_id + '&reason=' + reason)
+		resp = self._session.get(self.localeItems.URL + '/sidebar/inventory/ajax_item_menu?item_id=' + item_id + '&reason=' + reason)
 		if resp.status_code == 200:
 			resp_txt = resp.text.strip()
 			if resp_txt.startswith('--JSON--'):
@@ -478,7 +512,7 @@ class Freggers:
 		return None
 	
 	def ajax_item_usewith(self, item_id, target):
-		resp = self._session.post('http://www.freggers.de/sidebar/inventory/ajax_item_usewith', {
+		resp = self._session.post(self.localeItems.URL + '/sidebar/inventory/ajax_item_usewith', {
 			'item_id_a': item_id,
 			'target': target,
 			'room_context': self.room.room_context_label,
@@ -487,7 +521,7 @@ class Freggers:
 		return resp.status_code == 200
 	
 	def request_apartment_list(self, room_label):
-		resp = self._session.get('http://www.freggers.de/sidebar/apartment/index?room_context_label=' + room_label)
+		resp = self._session.get(self.localeItems.URL + '/sidebar/apartment/index?room_context_label=' + room_label)
 		if resp.status_code == 200:
 			resp_txt = resp.text
 			me_id = self.user_id
@@ -818,6 +852,9 @@ class Freggers:
 	def wait_movement_finished(self):
 		self.__e_movement_finished.wait()
 
+	def wait_exits_loaded(self):
+		self.__e_exits_loaded.wait()
+
 	#b1 unknown
 	def send_auto_walk_to(self, room_gui, b1 = True, exact = False):
 		msg = UtfMessage()
@@ -903,7 +940,7 @@ class Freggers:
 			self.disconnect()
 			self.log('Disconnected.')
 			self.log('Logging out... ({})'.format(data))
-			self._session.get('http://www.freggers.de/logout?r=' + str(reason) + ';session_id=' + self.params["sessionid"])
+			self._session.get(self.localeItems.URL + '/logout?r=' + str(reason) + ';session_id=' + self.params["sessionid"])
 			self.log('Logged out.')
 		if reason == 2:
 			self.__remote_log('ERROR', 'COOKIEJAR', 'User already logged in on system.', cb)
@@ -919,10 +956,10 @@ class Freggers:
 		}
 		if fee != None:
 			form_data['fee'] = fee
-		return self._session.post('http://www.freggers.de/sidebar/crafting/craft_recipe', form_data).status_code == 200
+		return self._session.post(self.localeItems.URL + '/sidebar/crafting/craft_recipe', form_data).status_code == 200
 	
 	def unlock_crafting_category(self, category_id):
-		return self._session.post('http://www.freggers.de/sidebar/crafting/category', {
+		return self._session.post(self.localeItems.URL + '/sidebar/crafting/category', {
 			'_brix_detect_charset': '€ ´ ü',
 			'session_id': self.params['sessionid'],
 			'category_id': category_id,
@@ -1012,7 +1049,8 @@ class Freggers:
 				pos = path.start
 				wob.iso_obj.set_position(pos.u, pos.v, pos.z)
 				anim = self.animation_manager.moveground(wob.iso_obj, MovementWayPoint.get_movement_waypoints(path), path.duration, path.age(), self.level, wob)
-				anim.on_complete = self.__handle_movement_done
+				if anim != None:
+					anim.on_complete = self.__handle_movement_done
 			else:
 				waypoint_pos = path.waypoints[-1].position
 				wob.iso_obj.set_position(waypoint_pos.u, waypoint_pos.v, waypoint_pos.z)
@@ -1141,6 +1179,7 @@ class Freggers:
 					self.__fire_event(Event.CTXT_SERVER)
 				elif subcmd == Freggers.CTXT_ROOM:
 					self.debug('Com: CTXT_ROOM')
+					self.__e_exits_loaded.clear()
 					ctxt_room = CtxtRoom(msg)
 					
 					self.area_name = ctxt_room.room_context_label.split('.',1)[0]
@@ -1152,7 +1191,7 @@ class Freggers:
 					
 					
 					self.level = Level(self.area_name, ctxt_room.gui())
-					RESOURCE_MANAGER.request_level(self._session, self.level, None, False, True)
+					RESOURCE_MANAGER.request_level(self, self.level, None, False, True)
 					
 					self.send_room_loaded(ctxt_room.gui(), ctxt_room.wob_id)
 					
@@ -1175,8 +1214,10 @@ class Freggers:
 						self.__fire_event(Event.ENV_USER, data)
 				elif subcmd == Freggers.ENV_EXIT:
 					self.debug('Com: ENV_EXIT')
+					self.exits.clear()
 					if self.__handle_env_msg(msg):
 						data = self.__process_exit_list()
+						self.__e_exits_loaded.set()
 						self.__fire_event(Event.ENV_EXIT, data)
 				elif subcmd == Freggers.ENV_ITEM:
 					self.debug('Com: ENV_ITEM')

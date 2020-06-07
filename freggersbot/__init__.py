@@ -423,8 +423,8 @@ class FreggersBot(Freggers):
 		self.__collect_time = time.time()
 	
 	def __collect_handle_action_feedback(self, txt):
-		if txt.endswith('wieder benutzbar.'):
-			unit = 1 if 'Sekunden' in txt else 60
+		if txt.endswith(self.localeItems.USE_WAIT_SUFFIX):
+			unit = 1 if self.localeItems.SECONDS in txt else 60
 			value = [int(s) for s in txt.split() if s.isdigit()][0]
 			self.__collect_remaining_wait = value * unit
 		else:
