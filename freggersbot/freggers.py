@@ -322,30 +322,6 @@ class Freggers:
 		def __init__(self, hairColor, bodyColor, eyeColor, gender):
 			self.hairColor = hairColor
 
-	@staticmethod
-	def create_account(locale, username, email, password, hairColor, bodyColor, eyeColor, set_num, gender, inviter_id = '0'):
-		session = requests.Session()
-		session.get('http://www.freggers.de')
-		trackUUID = None
-		for cookie in session.cookies:
-			if cookie.name == 'trackuuid':
-				trackUUID = cookie.value
-		resp = requests.post('http://www.freggers.de/ajax_register', {
-			'hc': hairColor,
-			'bc': bodyColor,
-			'fc': eyeColor,
-			'set_num': set_num,
-			'gender': gender,
-			'auth_type': 'internal',
-			'inviter_id': inviter_id,
-			'login': username,
-			'pass': password,
-			'email': email,
-			'terms': 1,
-			'trackuuid': trackUUID
-		})
-		print(resp.text)
-
 	def log(self, *args):
 		print('[i]', self.log_prefix, *args)
 	
@@ -520,6 +496,30 @@ class Freggers:
 		})
 		return resp.status_code == 200
 	
+
+	#Firstname max length: 100
+	#City max length: 50
+	#Homepage max length: 255
+	#Homepage/Email visibility values: all, loggedin, friends, nobody
+	#Messages from values: all, friends
+	def ajax_edit_profile(self, first_name, birth_day, birth_month, birth_year, country, city, homepage, homepage_visibility, email_visibility, allow_messages_from):
+		resp = self._session.post(self.localeItems.URL + '/sidebar/profile/ajax_edit_form', {
+			'_brix_detect_charset': '€ ´ ü',
+			'session_id': self.params['sessionid'],
+			'progress': 1,
+			'firstname': first_name,
+			'birth-day': birth_day,
+			'birth-month': birth_month,
+			'birth-year': birth_year,
+			'country': country,
+			'city': city,
+			'homepage': homepage,
+			'visib_homepage': homepage_visibility,
+			'visib_email': email_visibility,
+			'allow_message_from': allow_messages_from
+		})
+		return resp.status_code == 200
+
 	def request_apartment_list(self, room_label):
 		resp = self._session.get(self.localeItems.URL + '/sidebar/apartment/index?room_context_label=' + room_label)
 		if resp.status_code == 200:
@@ -750,7 +750,7 @@ class Freggers:
 					self.__update()
 				
 				last_frame = now
-				time.sleep(0.03)
+				time.sleep(0.05)
 			else:
 				time.sleep(0.25)
 	
@@ -1193,6 +1193,7 @@ class Freggers:
 					self.level = Level(self.area_name, ctxt_room.gui())
 					RESOURCE_MANAGER.request_level(self, self.level, None, False, True)
 					
+					self.log(ctxt_room.gui(), ctxt_room.wob_id)
 					self.send_room_loaded(ctxt_room.gui(), ctxt_room.wob_id)
 					
 					self.log('Loaded room {}.'.format(ctxt_room.room_gui))

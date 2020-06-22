@@ -99,7 +99,7 @@ class LocaleEN:
 	
 	DUNG_BEATLE = 'Dung Beetle "Cicero"'
 	ACORN = 'Mysterious Acorn'
-	#TODO: Strange Chestnut
+	CHESTNUT = 'Strange Chestnut'
 
 	GNOME = 'Builder sprite with a blue light'
 	
@@ -131,3 +131,15 @@ class LocaleEN:
 	EXPLORER_BADGE_ITEMS_3 = ['Furball of Gieselbrand the Werewolf',
 							  'Knocked out Tooth of Eldrick the Cruel',
 							  'Eye from Emilio the Zombie']
+	
+	GIFT_0 = 'Coffee table "Marlene"'
+	GIFT_1 = 'Chair "Snowberry Blu"'
+	GIFT_2 = 'Chair "Till"'
+	GIFT_3 = 'Bookshelf "Snowberry Blu S"'
+	GIFT_4 = 'Freezer "Poser"'
+	GIFT_5 = 'Dining Table "Snowberry Blu"'
+	GIFT_6 = 'Sleeping Acc'
+	GIFT_7 = 'Dining Table "Strawberry"'
+	GIFT_8 = 'Bookshelf "Strawberry S"'
+	GIFT_9 = 'Single Bed "Empty"'
+	GIFT_10 = 'Small Stove Flavius'

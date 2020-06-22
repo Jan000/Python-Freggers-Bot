@@ -13,12 +13,12 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
 	name = 'freggersbot',
-	version = '1.0.42',
+	version = '1.0.46',
 	author = 'Jan K',
 	author_email = 'contact@jandev.net',
 	license = 'MIT',
 	keywords = 'freggers bot',
-	description = 'A bot for freggers.de',
+	description = 'A bot for freggers(.de / .com)',
 	long_description = desc,
 	long_description_content_type = 'text/markdown',
 	url = 'https://github.com/Jan000/Python-Freggers-Bot',

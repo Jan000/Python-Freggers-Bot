@@ -38,7 +38,7 @@ class WOBRegistry:
 		
 	def get_player_by_name(self, username):
 		return self.players.get(username)
-	
+
 	def get_player_by_uid(self, user_id):
 		return self.players_by_uid.get(user_id)
 	

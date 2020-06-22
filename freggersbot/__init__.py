@@ -70,7 +70,7 @@ class FreggersBot(Freggers):
 	MIN_SEARCH_DONE_DELAY = 0.2
 	MAX_SEARCH_DONE_DELAY = 8
 	
-	def __init__(self, username, password, localeItems = LocaleDE):
+	def __init__(self, username, password, localeItems = LocaleDE, is_debug = False):
 		self.username = username
 		self.password = password
 		self.localeItems = localeItems
@@ -79,6 +79,7 @@ class FreggersBot(Freggers):
 		self.start_level_data = None
 		self.room_waits = {}
 		self.speed_factor = 0.3 + random.random()
+		self.__fregger_check = None
 		self.__ants_times = {}
 		self.__church_visited_today = False
 		self.__e_room_ready = threading.Event()
@@ -126,7 +127,7 @@ class FreggersBot(Freggers):
 		self.disposable_consuamables.update(localeItems.MUSHROOMS)
 		self.consumable_items.update(self.disposable_consuamables)
 		self.start = lambda: None
-		super(FreggersBot, self).__init__(log_prefix = '[' + self.username + ']', is_debug = False, localeItems = localeItems)
+		super(FreggersBot, self).__init__(log_prefix = '[' + self.username + ']', is_debug = is_debug, localeItems = localeItems)
 		self.register_callback(Event.CTXT_ROOM, self.__handle_room_ctxt)
 		self.register_callback(Event.SHOW_ACTION_FEEDBACK, self.__handle_show_action)
 		self.register_callback(Event.ACTION_SHOW_METROMAP, self.__handle_show_metromap)
@@ -461,7 +462,7 @@ class FreggersBot(Freggers):
 			self.log('[Bottles] Collecting {} / {}...'.format(collected_bottles, max_amount))
 			rooms = room_guis[area_index]
 			area_index = (area_index + 1) % len_areas
-			for room_label in rooms.keys() if random.random() > 0.5 else reversed(rooms.keys()):
+			for room_label in rooms.keys() if random.random() > 0.5 else reversed(list(rooms.keys())):
 				gui = rooms[room_label]
 				self.go_to_room(room_label, False)
 				self.__e_room_loaded.wait()
@@ -1447,7 +1448,12 @@ class FreggersBot(Freggers):
 		return None
 
 	def get_has_fregger_check(self):
-		return self.get_is_badge_completed(19)
+		if self.__fregger_check != None:
+			return self.__fregger_check
+		else:
+			val = self.get_is_badge_completed(19)
+			self.__fregger_check = val
+			return val
 	
 	def get_has_30_visitors_badge(self):
 		return self.get_is_badge_completed(13)

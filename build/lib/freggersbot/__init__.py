@@ -70,7 +70,7 @@ class FreggersBot(Freggers):
 	MIN_SEARCH_DONE_DELAY = 0.2
 	MAX_SEARCH_DONE_DELAY = 8
 	
-	def __init__(self, username, password, localeItems = LocaleDE):
+	def __init__(self, username, password, localeItems = LocaleDE, is_debug = False):
 		self.username = username
 		self.password = password
 		self.localeItems = localeItems
@@ -79,6 +79,7 @@ class FreggersBot(Freggers):
 		self.start_level_data = None
 		self.room_waits = {}
 		self.speed_factor = 0.3 + random.random()
+		self.__fregger_check = None
 		self.__ants_times = {}
 		self.__church_visited_today = False
 		self.__e_room_ready = threading.Event()
@@ -126,7 +127,7 @@ class FreggersBot(Freggers):
 		self.disposable_consuamables.update(localeItems.MUSHROOMS)
 		self.consumable_items.update(self.disposable_consuamables)
 		self.start = lambda: None
-		super(FreggersBot, self).__init__(log_prefix = '[' + self.username + ']', is_debug = False, localeItems = localeItems)
+		super(FreggersBot, self).__init__(log_prefix = '[' + self.username + ']', is_debug = is_debug, localeItems = localeItems)
 		self.register_callback(Event.CTXT_ROOM, self.__handle_room_ctxt)
 		self.register_callback(Event.SHOW_ACTION_FEEDBACK, self.__handle_show_action)
 		self.register_callback(Event.ACTION_SHOW_METROMAP, self.__handle_show_metromap)
@@ -461,7 +462,7 @@ class FreggersBot(Freggers):
 			self.log('[Bottles] Collecting {} / {}...'.format(collected_bottles, max_amount))
 			rooms = room_guis[area_index]
 			area_index = (area_index + 1) % len_areas
-			for room_label in rooms.keys() if random.random() > 0.5 else reversed(rooms.keys()):
+			for room_label in rooms.keys() if random.random() > 0.5 else reversed(list(rooms.keys())):
 				gui = rooms[room_label]
 				self.go_to_room(room_label, False)
 				self.__e_room_loaded.wait()
@@ -1447,7 +1448,12 @@ class FreggersBot(Freggers):
 		return None
 
 	def get_has_fregger_check(self):
-		return self.get_is_badge_completed(19)
+		if self.__fregger_check != None:
+			return self.__fregger_check
+		else:
+			val = self.get_is_badge_completed(19)
+			self.__fregger_check = val
+			return val
 	
 	def get_has_30_visitors_badge(self):
 		return self.get_is_badge_completed(13)
@@ -1511,17 +1517,17 @@ class FreggersBot(Freggers):
 	def unwrap_gifts(self, max_amount = 7):
 		guis = ['wutzlhofen.kiste_a_tutorial', 'wutzlhofen.kiste_b_tutorial', 'wutzlhofen.kiste_c_tutorial', 'wutzlhofen.kiste_d_tutorial', 'wutzlhofen.kiste_f_tutorial', 'wutzlhofen.kiste_h_tutorial']
 		unwrap_target_map = {
-			'Couchtisch "Marlene"': (49, 182, 47, 0),
-			'Stuhl "Snowberry Blu"': (157, 208, 47, 6),
-			'Stuhl "Till"': (21, 176, 47, 0),
-			'Bücherregal "Snowberry Blu S"': (68, 149, 47, 6),
-			'Kühlschrank "Angeber"': (152, 150, 47, 0),
-			'Esstisch "Snowberry Blu"': (156, 228, 47, 0),
-			'Schlafgelegenheit': (28, 266, 47, 0),
-			'Esstisch "Strawberry"': (156, 228, 47, 0),
-			'Bücherregal "Strawberry S"': (68, 149, 47, 6),
-			'Einzelbett "ausgeträumt"': (21, 278, 47, 0),
-			'Kleiner Herd Flavius': (157, 155, 47, 0)
+			self.localeItems.GIFT_0: (49, 182, 47, 0),
+			self.localeItems.GIFT_1: (157, 208, 47, 6),
+			self.localeItems.GIFT_2: (21, 176, 47, 0),
+			self.localeItems.GIFT_3: (68, 149, 47, 6),
+			self.localeItems.GIFT_4: (152, 150, 47, 0),
+			self.localeItems.GIFT_5: (156, 228, 47, 0),
+			self.localeItems.GIFT_6: (28, 266, 47, 0),
+			self.localeItems.GIFT_7: (156, 228, 47, 0),
+			self.localeItems.GIFT_8: (68, 149, 47, 6),
+			self.localeItems.GIFT_9: (21, 278, 47, 0),
+			self.localeItems.GIFT_10: (157, 155, 47, 0)
 		}
 		self.log('[Unwrap Gifts] Unwrapping up to {} gift(s)...'.format(max_amount))
 		if not self.ensure_empty_slots(1):

@@ -99,6 +99,7 @@ class LocaleDE:
 	
 	DUNG_BEATLE = 'Mistkäfer "Cicero"'
 	ACORN = 'Mysteriöse Eichel'
+	CHESTNUT = '_' #TODO
 	
 	GNOME = 'Bauwicht mit Blaulicht'
 	
@@ -130,3 +131,15 @@ class LocaleDE:
 	EXPLORER_BADGE_ITEMS_3 = ['Fellfussel von Gieselbrand dem Werwolf',
 							  'Ausgeschlagener Vampirzahn Eldricks des Grausamen',
 							  'Auge von Emilio dem Zombie']
+	
+	GIFT_0 = 'Couchtisch "Marlene"'
+	GIFT_1 = 'Stuhl "Snowberry Blu"'
+	GIFT_2 = 'Stuhl "Till"'
+	GIFT_3 = 'Bücherregal "Snowberry Blu S"'
+	GIFT_4 = 'Kühlschrank "Angeber"'
+	GIFT_5 = 'Esstisch "Snowberry Blu"'
+	GIFT_6 = 'Schlafgelegenheit'
+	GIFT_7 = 'Esstisch "Strawberry"'
+	GIFT_8 = 'Bücherregal "Strawberry S"'
+	GIFT_9 = 'Einzelbett "ausgeträumt"'
+	GIFT_10 = 'Kleiner Herd Flavius'
