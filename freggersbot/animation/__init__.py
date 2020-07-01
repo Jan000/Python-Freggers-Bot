@@ -59,7 +59,7 @@ class AnimationManager:
 		return target in self.animations
 	
 	def get_animation(self, target):
-		return self.animations[target]
+		return self.animations.get(target, None)
 		
 	def clear_animation(self, target):
 		if target in self.animations:

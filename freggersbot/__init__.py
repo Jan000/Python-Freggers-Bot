@@ -330,7 +330,7 @@ class FreggersBot(Freggers):
 	def get_target_pos(self, wob_id):
 		obj = self.wob_registry.get_object_by_wobid(wob_id)
 		if obj != None:
-			anim = self.animation_manager.animations.get(wob_id, None)
+			anim = self.animation_manager.get_animation(obj.iso_obj)
 			if anim != None:
 				return anim.get_target_pos()
 			return obj.iso_obj.get_uvz()

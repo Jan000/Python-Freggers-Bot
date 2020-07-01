@@ -9,6 +9,41 @@
 
 from .container_decoder import MediaContainerDecoder
 
+from PIL import Image
+
+class BitMapData:
+	
+	def __init__(self, data, width, height):
+		self.data = data
+		self.width = width
+		self.height = height
+	
+	def get_at(self, x, y):
+		return self.data[self.width * y + x]
+	
+	def to_image(self):
+		img = Image.new('RGBA', (self.width, self.height), 0xFF0000)
+		img.putdata(self.data)
+		return img
+
+	def save_to(self, file_name, show = False):
+		img = self.to_image()
+		img.save(file_name)
+		if show:
+			img.show()
+		return img
+
+	def __repr__(self):
+		return self.__str__()
+
+	def __str__(self):
+		s = 'BitMap({}x{}):\n'.format(self.width, self.height)
+		for x, b in enumerate(self.data):
+			s += '1' if b == 0xFF000000 else '0'
+			if x % self.width == 0:
+				s += '\n'
+		return s
+
 class Decoder:
 	
 	VERSION_NUMBER = 'Version'
@@ -93,7 +128,28 @@ class Decoder:
 	
 	@staticmethod
 	def create_bitmap_data(data, width):
-		pass
+		bit_len = data.available() * 8
+		bm_data = [0] * bit_len
+		x = 0
+		b = 0
+		while x < bit_len:
+			read_bit = True
+			if x % 8 == 0:
+				b = data.read_unsigned_byte()
+				if b == 0:
+					read_bit = False
+					x += 7
+				elif b == 255:
+					for z in range(8):
+						bm_data[x + z] = 0xFF000000
+					read_bit = False
+					x += 7
+			if read_bit:
+				if b & 128 != 0:
+					bm_data[x] = 0xFF000000
+				b <<= 1
+			x += 1
+		return BitMapData(bm_data, width, bit_len // width)
 		
 	@staticmethod
 	def get_cropped_bitmap_data_at(index, j, k, v_bitmap):
