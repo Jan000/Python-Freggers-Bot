@@ -2,7 +2,7 @@
 
 ## Important note
 Freggers was a simple flash game to chat and play by the Spin AG until December 2020. 
-Freggers.com / Freggers.de have been both shut down, hence this bot cannot be used anymore.
+**Freggers.com / Freggers.de have been both shut down**, hence this bot cannot be used anymore.
 
 ### Requirements
 
