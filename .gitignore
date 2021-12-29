@@ -1,7 +1,9 @@
+.gitignore
 upload_pypi.bat
 build.bat
 install_local.bat
 tests/
-.vscode
-*.egg-info
+.vscode/
+*.egg-info/
 data/
+error.log
