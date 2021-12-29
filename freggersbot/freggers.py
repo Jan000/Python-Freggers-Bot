@@ -18,27 +18,28 @@ import json
 import select
 from html.parser import HTMLParser
 
-from .data.item_interaction import ItemInteraction
-from .data.item_properties import ItemProperties
-from .data.ctxt_server import CtxtServer
-from .data.ctxt_room import CtxtRoom
-from .data.env import EnvUser, EnvItem, EnvMisc
-from .data.transfer import TrRoomJoin, TrRoomLeave, TrRoomReject
-from .data.chat import ChatUsr, ChatSrv
-from .data.action import ActionUpdateWob, ActionThrow
-from .data.list_cmd import MayVote
-from .data.interaction import InteractionData
-from .data.shop_item import ShopItem
-from .net.amf_api import AmfAPI
-from .animation import AnimationManager
-from .animation.movement import MovementWayPoint
-from .net.utf_message import UtfMessage
-from .iso import Status
-from .iso.player import Player
-from .iso.item import IsoItem
-from .iso.wob_registry import WOBRegistry
-from .media.resource_manager import RESOURCE_MANAGER
-from .media.level import Level
+from freggersbot.data.item_interaction import ItemInteraction
+from freggersbot.data.item_properties import ItemProperties
+from freggersbot.data.ctxt_server import CtxtServer
+from freggersbot.data.ctxt_room import CtxtRoom
+from freggersbot.data.env import EnvUser, EnvItem, EnvMisc
+from freggersbot.data.transfer import TrRoomJoin, TrRoomLeave, TrRoomReject
+from freggersbot.data.chat import ChatUsr, ChatSrv
+from freggersbot.data.action import ActionUpdateWob, ActionThrow
+from freggersbot.data.list_cmd import MayVote
+from freggersbot.data.interaction import InteractionData
+from freggersbot.data.shop_item import ShopItem
+from freggersbot.net.amf_api import AmfAPI
+from freggersbot.animation import AnimationManager
+from freggersbot.animation.movement import MovementWayPoint
+from freggersbot.net.utf_message import UtfMessage
+from freggersbot.iso import Status
+from freggersbot.iso.player import Player
+from freggersbot.iso.item import IsoItem
+from freggersbot.iso.wob_registry import WOBRegistry
+from freggersbot.media.resource_manager import RESOURCE_MANAGER
+from freggersbot.media.level import Level
+from freggersbot.media.background import LevelBackground
 
 BrowserInfo = {
 	'browser': 'Chrome',
@@ -50,7 +51,6 @@ Capabilities = {
 	'os': 'Windows 10',
 	'version': 'WIN 32,0,0,344'
 }
-
 class TargetPicker:
 
 	WOBID_INV = 1
@@ -1033,7 +1033,8 @@ class Freggers:
 		pass
 	
 	def __handle_movement_done(self, animation):
-		self.__e_movement_finished.set()
+		if self.player != None and animation.target == self.player.iso_obj:
+			self.__e_movement_finished.set()
 
 	def __update_wob_data(self, data, force, delay):
 		wob = self.wob_registry.get_object_by_wobid(data.wob_id)
@@ -1057,7 +1058,8 @@ class Freggers:
 		elif force:
 			if self.animation_manager.has_animation(wob.iso_obj):
 				self.animation_manager.clear_animation(wob.iso_obj)
-				self.__e_movement_finished.set()
+				if wob == self.player:
+					self.__e_movement_finished.set()
 			else:
 				wob.iso_obj.set_position(0, 0, 0)
 	
@@ -1131,10 +1133,13 @@ class Freggers:
 					in_msg = self.__in_msg
 					if in_msg.read(sock):
 						self.__in_msg = UtfMessage()
+
 						self.__handle_msg(in_msg)
 			else:
 				time.sleep(0.25)
 	
+	
+
 	def __handle_msg(self, msg):
 		if self.is_debug:
 			self.debug(msg.dump('RECV'))
@@ -1144,6 +1149,10 @@ class Freggers:
 				return
 			cmd = com[0]
 			subcmd = com[1] if len(com) > 1 else None
+			"""
+			with open('freggers/data/' + str(cmd) + '_' + str(subcmd) + '-' + str(int(time.time() * 1000)) + '.bin', 'w') as f:
+				f.write(str(msg.clone().get_raw_data().data()))
+			"""
 			if cmd == Freggers.PING:
 				self.debug('Com: PING')
 				ttl = msg.get_int_arg(1)
@@ -1193,7 +1202,9 @@ class Freggers:
 					self.level = Level(self.area_name, ctxt_room.gui())
 					RESOURCE_MANAGER.request_level(self, self.level, None, False, True)
 					
-					self.log(ctxt_room.gui(), ctxt_room.wob_id)
+					self.level_background = LevelBackground(self.area_name, ctxt_room.gui(), ctxt_room.brightness, self.level.bounds[2:])
+					RESOURCE_MANAGER.request_background(self, self.level_background, None, True)
+					
 					self.send_room_loaded(ctxt_room.gui(), ctxt_room.wob_id)
 					
 					self.log('Loaded room {}.'.format(ctxt_room.room_gui))

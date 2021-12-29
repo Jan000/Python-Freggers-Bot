@@ -87,7 +87,10 @@ class ByteBuffer:
 	
 	def size(self):
 		return len(self.__data)
-		
+	
+	def data(self):
+		return self.__data.copy()
+
 	def __str__(self):
 		return 'ByteBuffer(size={}, pos={}, byteorder={})'.format(len(self.__data), self.position, self.byteorder) 
 		

@@ -9,6 +9,13 @@
 
 from freggersbot.utils.bytebuffer import ByteBuffer
 
+import os
+import os.path
+import imageio
+import random
+import hashlib
+import base64
+
 class MediaContainerDecoder:
 	
 	TYPE_BITMAP = 0
@@ -34,7 +41,17 @@ class MediaContainerDecoder:
 		
 	@staticmethod
 	def __extract_bitmap(data):
-		pass
+		"""
+		data = data.data()
+		filename = 'data/images/img{}.png'.format(base64.b64encode(hashlib.md5(data).digest()).decode('utf-8').replace('/', '-'))
+		if not os.path.exists(filename):
+			os.makedirs(os.path.dirname(filename), exist_ok=True)
+			with open(filename, 'wb') as f:
+				f.write(data)
+		img = imageio.imread(filename)
+		return img
+		"""
+		return None
 		
 	@staticmethod
 	def __load_iso_comp(data):

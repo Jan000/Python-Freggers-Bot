@@ -33,6 +33,9 @@ class UtfMessage:
 		self.__data_expected = 0
 		self.__data = ByteBuffer()
 	
+	def get_raw_data(self):
+		return self.__data
+
 	@staticmethod
 	def as_hash(msg):
 		pass
@@ -405,6 +408,7 @@ class UtfMessage:
 			else:
 				msg.extend(UtfMessage.encode_to_utf8(s))
 		sock.sendall(msg)
+		
 		return len(msg)
 	
 	def hex_dump(self):

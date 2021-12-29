@@ -39,6 +39,7 @@ from .iso.item import IsoItem
 from .iso.wob_registry import WOBRegistry
 from .media.resource_manager import RESOURCE_MANAGER
 from .media.level import Level
+from .media.background import LevelBackground
 
 BrowserInfo = {
 	'browser': 'Chrome',
@@ -1033,7 +1034,8 @@ class Freggers:
 		pass
 	
 	def __handle_movement_done(self, animation):
-		self.__e_movement_finished.set()
+		if self.player != None and animation.target == self.player.iso_obj:
+			self.__e_movement_finished.set()
 
 	def __update_wob_data(self, data, force, delay):
 		wob = self.wob_registry.get_object_by_wobid(data.wob_id)
@@ -1057,7 +1059,8 @@ class Freggers:
 		elif force:
 			if self.animation_manager.has_animation(wob.iso_obj):
 				self.animation_manager.clear_animation(wob.iso_obj)
-				self.__e_movement_finished.set()
+				if wob == self.player:
+					self.__e_movement_finished.set()
 			else:
 				wob.iso_obj.set_position(0, 0, 0)
 	
@@ -1193,7 +1196,9 @@ class Freggers:
 					self.level = Level(self.area_name, ctxt_room.gui())
 					RESOURCE_MANAGER.request_level(self, self.level, None, False, True)
 					
-					self.log(ctxt_room.gui(), ctxt_room.wob_id)
+					self.level_background = LevelBackground(self.area_name, ctxt_room.gui(), ctxt_room.brightness, self.level.bounds[2:])
+					RESOURCE_MANAGER.request_background(self, self.level_background, None, True)
+					
 					self.send_room_loaded(ctxt_room.gui(), ctxt_room.wob_id)
 					
 					self.log('Loaded room {}.'.format(ctxt_room.room_gui))

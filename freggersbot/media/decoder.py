@@ -7,7 +7,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-from .container_decoder import MediaContainerDecoder
+from freggersbot.media.container_decoder import MediaContainerDecoder
 
 from PIL import Image
 
@@ -19,7 +19,9 @@ class BitMapData:
 		self.height = height
 	
 	def get_at(self, x, y):
-		return self.data[self.width * y + x]
+		if x >= 0 and x < self.width and y >= 0 and y < self.height:
+			return self.data[self.width * y + x]
+		return None
 	
 	def to_image(self):
 		img = Image.new('RGBA', (self.width, self.height), 0xFF0000)
@@ -158,6 +160,81 @@ class Decoder:
 	@staticmethod
 	def check_container_type(container, type):
 		return container[0][0] == MediaContainerDecoder.TYPE_STRING and container[0][1] == type
+	
+	@staticmethod
+	def decode_background(container):
+		if not Decoder.check_container_type(container, Decoder.TYPE_LEVELBG):
+			print('The media content does not contain background data')
+			return None
+		ver_num = container[1]
+		if ver_num[0] != MediaContainerDecoder.TYPE_BYTE:
+			print('Failed to read background version')
+			return None
+		ver_num = ver_num[1]
+		decoded = {
+			Decoder.VERSION_NUMBER: ver_num
+		}
+		if ver_num == 2:
+			Decoder.decode_background_v2(container, decoded)
+			return decoded
+		else:
+			print('Unsupported level background version:', ver_num)
+			return None
+
+	@staticmethod
+	def decode_background_v2(container, decoded):
+		offset_x = container[2]
+		if offset_x[0] != MediaContainerDecoder.TYPE_INT:
+			print('Failed to read x offset of background')
+			return None
+		offset_y = container[3]
+		if offset_y[0] != MediaContainerDecoder.TYPE_INT:
+			print('Failed to read y offset of background')
+			return None
+		decoded[Decoder.BG_OFFSET] = (offset_x[1], offset_y[1])
+		width = container[4]
+		if width[0] != MediaContainerDecoder.TYPE_INT:
+			print('Failed to read the width at index 4')
+			return None
+		width = width[1]
+		height = container[5]
+		if height[0] != MediaContainerDecoder.TYPE_INT:
+			print('Failed to read the height at index 5')
+			return None
+		height = height[1]
+		bitmap = container[6]
+		if bitmap[0] != MediaContainerDecoder.TYPE_BITMAP and bitmap[0] != MediaContainerDecoder.TYPE_ARGB32:
+			print('Failed to read background image')
+			return None
+		#print(bitmap)
+		bitmap = bitmap[1]
+		
+		decoded[Decoder.BG_IMAGE] = bitmap
+		decoded[Decoder.BG_WIDTH] = width
+		decoded[Decoder.BG_HEIGHT] = height
+
+		#print(decoded)
+
+		"""
+		var _loc9_:Matrix = new Matrix(_loc6_ / _loc8_.width,0,0,_loc7_ / _loc8_.height);
+         var _loc10_:BitmapData = new BitmapData(_loc6_,_loc7_,false,4294901760);
+         _loc10_.draw(_loc8_,_loc9_);
+         _loc8_.dispose();
+         param2[BG_IMAGE] = _loc10_.getPixels(_loc10_.rect);
+         param2[BG_WIDTH] = _loc6_;
+         param2[BG_HEIGHT] = _loc7_;
+         _loc10_.dispose();
+		"""
+
+		#decoded[Decoder.BG_IMAGE].save_to('bg.png', True)
+
+		if 7 < len(container):
+			lightmap = container[7]
+			if lightmap[0] == MediaContainerDecoder.TYPE_BITMAP or lightmap[0] == MediaContainerDecoder.TYPE_ARGB32:
+				decoded[Decoder.BG_LIGHTMAP] = lightmap[1]
+			else:
+				print('Invalid lightmap data at index 7')
+				return None
 	
 	@staticmethod
 	def decode_level(container, v_bitmap = False):

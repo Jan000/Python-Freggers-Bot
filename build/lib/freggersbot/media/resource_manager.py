@@ -83,7 +83,30 @@ class ResourceManager:
 		else:
 			print('[e] [ResourceManager] Invalid response received while loading level:', resp.status_code)
 		return False
-		
+	
+	def request_background(self, freggers, background, err_callback = None, use_cache = False):
+		"""
+		if not self.__inited or ResourceManager.PARAM_ROOM_BASE_URL not in self.__config:
+			print('[i] [ResourceManager] Not initialized or invalid config.')
+			return False
+		if use_cache:
+			bg = self.__background_cache.get(background.identifier)
+			if bg != None:
+				background.set(bg)
+				return True
+		resp = freggers._session.get(freggers.localeItems.URL + self.__config[ResourceManager.PARAM_ROOM_BASE_URL] + '/' + background.area_name + '/' + background.room_name + '/' + background.room_name + '_bg_' + str(background.brightness) + '.bin' + self.__image_buster)
+		if resp.status_code == 200:
+			media_container_dec = MediaContainerDecoder()
+			media_container = media_container_dec.decode_data_bytes(resp.content)
+			background.decode(media_container)
+			self.__background_cache.put(background.identifier, background.clone())
+			print('[i] [ResourceManager] Successfully loaded level background {}.'.format(background.identifier))
+			return True
+		else:
+			print('[e] [ResourceManager] Invalid response received while loading level background:', resp.status_code)
+		return False
+		"""
+
 	def __remove_resource(self, index):
 		if index < 0:
 			return

@@ -72,8 +72,13 @@ class ResourceManager:
 				resource = self.__resource_data[x]
 				if resource.cache_mode == ResourceManager.RELEASE_ON_LEVEL_LOAD:
 					self.__remove_resource(x)
-		resp = freggers._session.get(freggers.localeItems.URL + self.__config[ResourceManager.PARAM_ROOM_BASE_URL] + '/' + level.area_name + '/' + level.room_name + '/' + level.room_name + '.bin' + self.__image_buster)
+		url = freggers.localeItems.URL + self.__config[ResourceManager.PARAM_ROOM_BASE_URL] + '/' + level.area_name + '/' + level.room_name + '/' + level.room_name + '.bin' + self.__image_buster
+		resp = freggers._session.get(url)
 		if resp.status_code == 200:
+			"""
+			with open('freggers/level/' + level.area_name + '_' + level.room_name + '_' + level.room_name + '.bin', 'w') as f:
+				f.write(str(resp.content))
+			"""
 			media_container_dec = MediaContainerDecoder()
 			media_container = media_container_dec.decode_data_bytes(resp.content)
 			level.decode(media_container)
@@ -83,7 +88,33 @@ class ResourceManager:
 		else:
 			print('[e] [ResourceManager] Invalid response received while loading level:', resp.status_code)
 		return False
-		
+	
+	def request_background(self, freggers, background, err_callback = None, use_cache = False):
+		if not self.__inited or ResourceManager.PARAM_ROOM_BASE_URL not in self.__config:
+			print('[i] [ResourceManager] Not initialized or invalid config.')
+			return False
+		if use_cache:
+			bg = self.__background_cache.get(background.identifier)
+			if bg != None:
+				background.set(bg)
+				return True
+		url = freggers.localeItems.URL + self.__config[ResourceManager.PARAM_ROOM_BASE_URL] + '/' + background.area_name + '/' + background.room_name + '/' + background.room_name + '_bg_' + str(background.brightness) + '.bin' + self.__image_buster
+		resp = freggers._session.get(url)
+		if resp.status_code == 200:
+			"""
+			with open('freggers/background/' + background.area_name + '_' + background.room_name + '_' + background.room_name + '_bg_' + str(background.brightness) + '.bin', 'w') as f:
+				f.write(str(resp.content))
+			"""
+			media_container_dec = MediaContainerDecoder()
+			media_container = media_container_dec.decode_data_bytes(resp.content)
+			background.decode(media_container)
+			self.__background_cache.put(background.identifier, background.clone())
+			print('[i] [ResourceManager] Successfully loaded level background {}.'.format(background.identifier))
+			return True
+		else:
+			print('[e] [ResourceManager] Invalid response received while loading level background:', resp.status_code)
+		return False
+
 	def __remove_resource(self, index):
 		if index < 0:
 			return

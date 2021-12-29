@@ -1,3 +1,7 @@
 upload_pypi.bat
 build.bat
 install_local.bat
+tests/
+.vscode
+*.egg-info
+data/

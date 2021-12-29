@@ -13,7 +13,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
 	name = 'freggersbot',
-	version = '1.0.46',
+	version = '1.0.47',
 	author = 'Jan K',
 	author_email = 'contact@jandev.net',
 	license = 'MIT',

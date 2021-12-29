@@ -1,0 +1,48 @@
+Traceback (most recent call last):
+  File "y:/Desktop/Python Freggers Bot/tests/test.py", line 45, in run
+    self.fetch_room(done_rooms)
+  File "y:/Desktop/Python Freggers Bot/tests/test.py", line 56, in fetch_room
+    if not e.gui:
+AttributeError: 'dict' object has no attribute 'gui'
+Traceback (most recent call last):
+  File "y:/Desktop/Python Freggers Bot/tests/test.py", line 45, in run
+    self.fetch_room(done_rooms)
+  File "y:/Desktop/Python Freggers Bot/tests/test.py", line 59, in fetch_room
+    self.send_move_on_ground_to(e.polygon[0], e.polygon[1], e.polygon[2], e.z)
+AttributeError: 'dict' object has no attribute 'polygon'
+Traceback (most recent call last):
+  File "y:/Desktop/Python Freggers Bot/tests/test.py", line 45, in run
+    self.fetch_room(done_rooms)
+  File "y:/Desktop/Python Freggers Bot/tests/test.py", line 59, in fetch_room
+    self.send_move_on_ground_to(e['polygon'][0], e['polygon'][1], e['polygon'][2], e['z'])
+  File "y:\desktop\python freggers bot\freggersbot\freggers.py", line 851, in send_move_on_ground_to
+    return self.__send(msg)
+  File "y:\desktop\python freggers bot\freggersbot\freggers.py", line 780, in __send
+    return self.__send_raw(msg)
+  File "y:\desktop\python freggers bot\freggersbot\freggers.py", line 769, in __send_raw
+    sent_bytes = utfmsg.send(self.__sock)
+  File "y:\desktop\python freggers bot\freggersbot\net\utf_message.py", line 398, in send
+    self.pack()
+  File "y:\desktop\python freggers bot\freggersbot\net\utf_message.py", line 216, in pack
+    if arg.pack():
+  File "y:\desktop\python freggers bot\freggersbot\net\utf_message.py", line 221, in pack
+    self.__data.write_short(UtfMessage.gen_header(UtfMessage.TYPE_CHARS, len(arg)))
+TypeError: object of type 'int' has no len()
+Traceback (most recent call last):
+  File "y:/Desktop/Python Freggers Bot/tests/test.py", line 46, in run
+    self.fetch_room(done_rooms)
+  File "y:/Desktop/Python Freggers Bot/tests/test.py", line 79, in fetch_room
+    self.send_move_on_ground_to(*center, self.level.get_height_at(*center))
+  File "y:\desktop\python freggers bot\freggersbot\freggers.py", line 851, in send_move_on_ground_to
+    return self.__send(msg)
+  File "y:\desktop\python freggers bot\freggersbot\freggers.py", line 780, in __send
+    return self.__send_raw(msg)
+  File "y:\desktop\python freggers bot\freggersbot\freggers.py", line 769, in __send_raw
+    sent_bytes = utfmsg.send(self.__sock)
+  File "y:\desktop\python freggers bot\freggersbot\net\utf_message.py", line 398, in send
+    self.pack()
+  File "y:\desktop\python freggers bot\freggersbot\net\utf_message.py", line 216, in pack
+    if arg.pack():
+  File "y:\desktop\python freggers bot\freggersbot\net\utf_message.py", line 232, in pack
+    self.__data.write_short(i + 65536 & 65535)
+TypeError: unsupported operand type(s) for &: 'float' and 'int'

@@ -40,6 +40,7 @@ freggersbot/locale/__init__.py
 freggersbot/locale/de.py
 freggersbot/locale/en.py
 freggersbot/media/__init__.py
+freggersbot/media/background.py
 freggersbot/media/container_decoder.py
 freggersbot/media/decoder.py
 freggersbot/media/level.py

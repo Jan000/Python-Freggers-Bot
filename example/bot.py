@@ -12,17 +12,6 @@ start_time = time.time()
 
 from freggersbot.iso import Status
 
-class TranslucentFregger(FreggersBot):
-	
-	def __init__(self, username, password):
-		super(FreggersBot, self).__init__(username, password)
-		self.start = self.run
-		
-	def run(self):
-		self.wait_room_loaded()
-		self.send_set_status(Status.GHOST)
-		#self.send_set_status(Status.SPOOK)
-
 class BasicFreggersBot(FreggersBot):
 	
 	def __init__(self, username, password):

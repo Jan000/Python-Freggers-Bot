@@ -179,9 +179,13 @@ class FreggersBot(Freggers):
 		self.timer_bar = data / 1000
 		self.__e_timer_bar.set()
 	
+	def on_room_loaded(self, room):
+		pass
+
 	def __handle_room_ctxt(self, room):
 		self.debug('Handle CTXT_ROOM:',room.room_context_label,room.gui(),room.room_gui,self.area_name,room.wob_id,
 			room.desc,room.topic,room.user_owns_room,room.owner_user_id,room.owner_user_name)
+		self.on_room_loaded(room)
 		self.__e_room_loaded.clear()
 		self.__e_level_data.clear()
 		self.__e_room_ready.set()
@@ -2452,3 +2456,6 @@ class FreggersBot(Freggers):
 	
 	def wait_room_loaded(self):
 		self.__e_room_loaded.wait()
+	
+	def clear_room_loaded(self):
+		self.__e_room_loaded.clear()
